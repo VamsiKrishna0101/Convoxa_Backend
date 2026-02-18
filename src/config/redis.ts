@@ -1,7 +1,6 @@
-import Redis from 'ioredis';
 import dotenv from 'dotenv';
-
 dotenv.config();
+import Redis from 'ioredis';
 
 // Configuration from user
 export const redisConfig = {
