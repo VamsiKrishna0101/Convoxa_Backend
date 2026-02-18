@@ -4,7 +4,7 @@
     "module": "ESNext",
     "rootDir": "src",
     "outDir": "dist",
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
