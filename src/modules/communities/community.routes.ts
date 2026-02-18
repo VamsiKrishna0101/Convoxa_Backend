@@ -14,7 +14,7 @@ import {
     deleteCommunityRule,
     getCommunityRules,
     toggleMuteStatus
-} from "./community.controller";
+} from "./community.controller.js";
 
 const router = express.Router();
 

@@ -6,7 +6,7 @@ import {
     getExploreCommunitiesByTopic,
     getCommunitiesByTopic,
     search
-} from "./explore.controller";
+} from "./explore.controller.js";
 
 const router = express.Router();
 

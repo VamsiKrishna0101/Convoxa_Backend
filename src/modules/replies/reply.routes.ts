@@ -8,7 +8,7 @@ import {
     voteReply,
     removeVote,
     getUserReplyVotes
-} from "./reply.controller";
+} from "./reply.controller.js";
 
 const router = express.Router();
 

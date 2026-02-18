@@ -11,7 +11,7 @@ import {
     markAsRead,
     toggleMute,
     leaveGroup
-} from "./group.controller";
+} from "./group.controller.js";
 
 const router = express.Router();
 

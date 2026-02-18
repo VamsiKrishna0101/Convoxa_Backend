@@ -18,7 +18,7 @@ import {
     getBlockedChats,
     toggleMute,
     withdrawRequest
-} from "./chat.controller";
+} from "./chat.controller.js";
 
 const router = express.Router();
 

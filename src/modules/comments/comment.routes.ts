@@ -8,7 +8,7 @@ import {
     voteComment,
     removeVote,
     getUserCommentVotes
-} from "./comment.controller";
+} from "./comment.controller.js";
 
 const router = express.Router();
 

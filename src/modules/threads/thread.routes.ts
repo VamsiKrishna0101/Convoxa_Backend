@@ -11,7 +11,7 @@ import {
     voteThread,
     removeVote,
     getAllVotesOfUser
-} from "./thread.controller";
+} from "./thread.controller.js";
 
 const router = express.Router();
 

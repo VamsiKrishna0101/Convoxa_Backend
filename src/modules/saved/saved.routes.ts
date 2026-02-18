@@ -7,7 +7,7 @@ import {
     saveComment,
     removeSavedComment,
     getSavedComments
-} from "./saved.controller";
+} from "./saved.controller.js";
 
 const router = express.Router();
 

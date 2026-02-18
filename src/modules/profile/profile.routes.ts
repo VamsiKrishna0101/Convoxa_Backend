@@ -18,7 +18,7 @@ import {
     getUserFollowers,
     getUserFollowing,
     getUserUpvotes
-} from "./profile.controller";
+} from "./profile.controller.js";
 
 const router = express.Router();
 

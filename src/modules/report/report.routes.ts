@@ -4,7 +4,7 @@ import {
     createReport,
     getCommunityReports,
     deleteReport
-} from "./report.controller";
+} from "./report.controller.js";
 
 const router = express.Router();
 
