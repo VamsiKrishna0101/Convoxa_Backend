@@ -1,0 +1,7 @@
+[dotenv@17.2.3] injecting env (5) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+Starting Follow Verification...
+Created users: user1_1769998070747, user2_1769998071168
+User 1 following User 2...
+TypeError: Cannot read properties of undefined (reading 'create')
+    at main (C:\Users\Welcome\Desktop\Adda_Backend\src\scripts\verify_follow.ts:29:44)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
