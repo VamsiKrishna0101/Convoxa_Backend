@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import type { Request, Response } from "express";
 import { AuthService } from './auth.services.js'
 import { GoogleAuthService } from './googleAuth.service.js';

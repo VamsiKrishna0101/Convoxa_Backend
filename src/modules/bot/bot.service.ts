@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import prisma from "../../config/prisma";
 import { botQueue } from "../../config/queue";

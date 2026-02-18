@@ -1,4 +1,4 @@
-
+import 'dotenv/config';
 import axios from 'axios';
 // Direct environment access for Cloud Run reliability
 
