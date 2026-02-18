@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import Redis from "ioredis";
 
-dotenv.config({ override: true });
+dotenv.config({ override: false });
 
 function getEnv(key: string): string {
     const value = process.env[key];

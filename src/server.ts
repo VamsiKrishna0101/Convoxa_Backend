@@ -1,12 +1,14 @@
 
 import { env } from './config/env'
-// Production Log Suppression
+// Production Log Suppression (Disabled for debugging Cloud Run startup)
+/*
 if (process.env.NODE_ENV === 'production') {
     console.log = () => { };
     console.info = () => { };
     console.debug = () => { };
     console.warn = () => { };
 }
+*/
 
 import express from 'express'
 import authRoutes from './modules/auth/auth.routes.js'
