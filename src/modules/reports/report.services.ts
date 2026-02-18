@@ -1,6 +1,5 @@
-
+import { ReportStatus } from "@prisma/client";
 import prisma from "../../config/prisma";
-import type { Prisma } from "@prisma/client";
 
 export interface CreateReportInput {
     reason: string;
@@ -46,8 +45,8 @@ export class ReportService {
                 reportedUserId,
                 communityId,
                 ruleId,
-                status: "PENDING"
-            }
+                status: "PENDING" as ReportStatus
+            } as any
         });
 
         return report;

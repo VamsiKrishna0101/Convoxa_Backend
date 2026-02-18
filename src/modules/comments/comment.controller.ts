@@ -76,7 +76,7 @@ export const getThreadComments = async (req: Request, res: Response) => {
 
         console.log("🔍 [Contoller] getThreadComments query:", req.query, "-> sortBy:", sortBy);
 
-        const result = await CommentService.getThreadComments(threadId, userId, cursor, limit, sortBy);
+        const result = await CommentService.getThreadComments(String(threadId), userId, cursor, limit, sortBy);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
         if (error.message === "THREAD_NOT_FOUND") {

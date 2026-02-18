@@ -240,7 +240,7 @@ export async function toggleMute(req: Request, res: Response) {
         const { conversationId } = req.params;
         const { isMuted } = req.body;
 
-        const result = await ChatService.toggleMute(conversationId, userId, isMuted);
+        const result = await ChatService.toggleMute(String(conversationId), userId, isMuted);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
         if (error.message === "NOT_A_PARTICIPANT") {

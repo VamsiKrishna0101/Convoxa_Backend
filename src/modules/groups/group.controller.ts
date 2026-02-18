@@ -131,7 +131,7 @@ export async function toggleMute(req: Request, res: Response) {
         const userId = req.user!.userId;
         const { groupId } = req.params;
         const { isMuted } = req.body;
-        const result = await GroupService.toggleMute(groupId, userId, isMuted);
+        const result = await GroupService.toggleMute(String(groupId), userId, isMuted);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
         if (error.message === "NOT_A_MEMBER") {
@@ -146,7 +146,7 @@ export async function leaveGroup(req: Request, res: Response) {
     try {
         const userId = req.user!.userId;
         const { groupId } = req.params;
-        const result = await GroupService.leaveGroup(groupId, userId);
+        const result = await GroupService.leaveGroup(String(groupId), userId);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
         if (error.message === "NOT_A_MEMBER") {

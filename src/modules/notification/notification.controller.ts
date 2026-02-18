@@ -113,7 +113,7 @@ export const deleteNotification = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: "Notification ID required" });
         }
 
-        await NotificationService.deleteNotification(userId, notificationId);
+        await NotificationService.deleteNotification(userId, String(notificationId));
         return res.status(200).json({ success: true, message: "Notification deleted" });
     } catch (error: any) {
         console.error("Error deleting notification:", error);

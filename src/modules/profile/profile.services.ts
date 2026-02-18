@@ -54,14 +54,14 @@ export class ProfileService {
 
         if (!user) throw new Error("USER_NOT_FOUND")
 
-        let isFollowing = false;
-        let conversationStatus = undefined;
-        let conversationId = undefined;
-        let initiatorId = undefined;
-        let withdrawnAt = undefined;
+        let isFollowingVal: boolean = false;
+        let conversationStatusVal: string | undefined = undefined;
+        let conversationIdVal: string | undefined = undefined;
+        let initiatorIdVal: string | null | undefined = undefined;
+        let withdrawnAtVal: Date | null | undefined = undefined;
 
         if (viewerId && viewerId !== userId) {
-            const [followCheck, conversation] = await Promise.all([
+            const [fCheckRes, convRes]: [any, any] = await Promise.all([
                 prisma.userFollow.findFirst({
                     where: { followerId: viewerId, followingId: userId }
                 }),
@@ -78,15 +78,15 @@ export class ProfileService {
                         status: true,
                         initiatorId: true,
                         withdrawnAt: true
-                    }
+                    } as any
                 })
             ]);
-            isFollowing = !!followCheck;
-            if (conversation) {
-                conversationStatus = conversation.status;
-                conversationId = conversation.id;
-                initiatorId = conversation.initiatorId;
-                withdrawnAt = conversation.withdrawnAt;
+            isFollowingVal = !!fCheckRes;
+            if (convRes) {
+                conversationStatusVal = convRes.status;
+                conversationIdVal = convRes.id;
+                initiatorIdVal = convRes.initiatorId;
+                withdrawnAtVal = convRes.withdrawnAt;
             }
         }
 
@@ -94,14 +94,14 @@ export class ProfileService {
             ...user,
             followersCount: user._count.followers,
             followingCount: user._count.following,
-            isFollowing,
-            conversationStatus,
-            conversationId,
-            initiatorId,
-            withdrawnAt,
+            isFollowing: isFollowingVal,
+            conversationStatus: conversationStatusVal,
+            conversationId: conversationIdVal,
+            initiatorId: initiatorIdVal,
+            withdrawnAt: withdrawnAtVal,
             threads: threads.map(t => ({ ...t, avatarConfig: t.author?.avatarConfig })),
             comments
-        }
+        } as any;
     }
 
     static async getPosts(userId: string, sort: 'asc' | 'desc' = 'desc'): Promise<UserThreadOutput[]> {
@@ -268,7 +268,7 @@ export class ProfileService {
     static async updateAvatarConfig(userId: string, avatarConfig: object) {
         const updatedUser = await prisma.user.update({
             where: { id: userId },
-            data: { avatarConfig },
+            data: { avatarConfig: avatarConfig as any },
             select: {
                 id: true,
                 username: true,

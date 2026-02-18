@@ -99,12 +99,12 @@ export class ReportService {
             data: {
                 reporterId: userId,
                 communityId,
-                threadId,
-                commentId,
-                replyId,
-                ruleId,
-                reason
-            }
+                threadId: threadId || null,
+                commentId: commentId || null,
+                replyId: replyId || null,
+                ruleId: ruleId || null,
+                reason: reason || ""
+            } as any
         });
 
         return {
@@ -144,6 +144,7 @@ export class ReportService {
             communityId: report.communityId,
             threadId: report.threadId ?? undefined,
             commentId: report.commentId ?? undefined,
+            replyId: report.replyId ?? undefined,
             ruleId: report.ruleId ?? undefined,
             reason: report.reason ?? undefined,
             createdAt: report.createdAt.toISOString()

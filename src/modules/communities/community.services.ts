@@ -1,4 +1,5 @@
 import { CommunityInput, CommunityOutput, CommunityRuleInput, CommunityRuleOutput } from "./community.types";
+import { CommunityTopic, CommunityVisibility } from "@prisma/client";
 import prisma from "../../config/prisma";
 import { CacheService, CACHE_TTL } from "../common/cache.service";
 import crypto from "crypto";
@@ -39,8 +40,8 @@ export class CommunityService {
             data: {
                 name,
                 description,
-                topic,
-                visibility,
+                topic: topic as CommunityTopic,
+                visibility: visibility as CommunityVisibility,
                 allowAnonymous,
                 joinCode,
                 imageUrl,
@@ -105,8 +106,8 @@ export class CommunityService {
 
         if (name) updateData.name = name;
         if (description) updateData.description = description;
-        if (topic) updateData.topic = topic;
-        if (visibility) updateData.visibility = visibility;
+        if (topic) updateData.topic = topic as CommunityTopic;
+        if (visibility) updateData.visibility = visibility as CommunityVisibility;
         if (allowAnonymous !== undefined) updateData.allowAnonymous = allowAnonymous;
         if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
 
@@ -118,7 +119,7 @@ export class CommunityService {
         // 5️⃣ Update using Prisma
         const updatedCommunity = await prisma.community.update({
             where: { id: communityId },
-            data: updateData
+            data: updateData as any
         });
 
         // 6️⃣ Invalidate Cache
@@ -435,7 +436,10 @@ export class CommunityService {
             order: rule.order,
             communityId: rule.communityId,
             keywords: rule.keywords,
-            appliesTo: rule.appliesTo
+            appliesTo: rule.appliesTo as "POST" | "COMMENT" | "BOTH",
+            isActive: rule.isActive,
+            createdAt: rule.createdAt.toISOString(),
+            updatedAt: rule.updatedAt.toISOString()
         };
     }
 
@@ -508,7 +512,7 @@ export class CommunityService {
             order: updatedRule.order,
             communityId: updatedRule.communityId,
             keywords: updatedRule.keywords,
-            appliesTo: updatedRule.appliesTo,
+            appliesTo: updatedRule.appliesTo as "POST" | "COMMENT" | "BOTH",
             isActive: updatedRule.isActive,
             createdAt: updatedRule.createdAt.toISOString(),
             updatedAt: updatedRule.updatedAt.toISOString()
@@ -565,7 +569,7 @@ export class CommunityService {
             order: rule.order,
             communityId: rule.communityId,
             keywords: rule.keywords,
-            appliesTo: rule.appliesTo,
+            appliesTo: rule.appliesTo as "POST" | "COMMENT" | "BOTH",
             isActive: rule.isActive,
             createdAt: rule.createdAt.toISOString(),
             updatedAt: rule.updatedAt.toISOString()

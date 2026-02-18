@@ -24,7 +24,7 @@ async function main() {
                 description: "Test Desc",
                 topic: "TECHNOLOGY", // Valid enum
                 ownerId: user.id
-            }
+            } as any
         });
 
         await prisma.communityMember.create({

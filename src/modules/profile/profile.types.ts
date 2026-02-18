@@ -7,6 +7,10 @@ export type ProfileOutput = {
     followersCount: number
     followingCount: number
     isFollowing?: boolean
+    conversationStatus?: string
+    conversationId?: string
+    initiatorId?: string | null
+    withdrawnAt?: Date | null
     threads: UserThreadOutput[]
     comments: UserCommentOutput[]
 }
