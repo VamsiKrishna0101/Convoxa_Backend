@@ -1,8 +1,8 @@
 
-import { ThreadService } from "../modules/threads/thread.services";
-import { CommentService } from "../modules/comments/comments.services";
-import { ReplyService } from "../modules/replies/reply.services";
-import prisma from "../config/prisma";
+import { ThreadService } from "../modules/threads/thread.services.js";
+import { CommentService } from "../modules/comments/comments.services.js";
+import { ReplyService } from "../modules/replies/reply.services.js";
+import prisma from "../config/prisma.js";
 
 async function main() {
     console.log("🚀 Starting Soft Delete Verification...");

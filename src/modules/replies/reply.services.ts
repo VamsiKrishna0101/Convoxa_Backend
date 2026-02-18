@@ -1,8 +1,8 @@
-import prisma from "../../config/prisma";
-import type { ReplyInput, ReplyOutput, EditReplyInput, DeleteReplyInput } from "./reply.types";
-import { NotificationService } from "../notification/notification.services";
+import prisma from "../../config/prisma.js";
+import type { ReplyInput, ReplyOutput, EditReplyInput, DeleteReplyInput } from "./reply.types.js";
+import { NotificationService } from "../notification/notification.services.js";
 import { NotificationType, NotificationStatus } from "@prisma/client";
-import { CacheService } from "../common/cache.service";
+import { CacheService } from "../common/cache.service.js";
 
 export class ReplyService {
 

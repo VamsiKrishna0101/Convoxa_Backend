@@ -1,6 +1,6 @@
 import express from 'express'
-import { requireAuth } from '../../middlewares/auth.middleware'
-import { getAdminCommunities, makeMod, getMembersOfCommunity, getAllFlaggedThreadsOfCommunity, getAllReportsOfCommunity } from './admin.controller'
+import { requireAuth } from '../../middlewares/auth.middleware.js'
+import { getAdminCommunities, makeMod, getMembersOfCommunity, getAllFlaggedThreadsOfCommunity, getAllReportsOfCommunity } from './admin.controller.js'
 
 const router = express.Router()
 

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { HomeFeedService } from "./homefeed.services";
+import { HomeFeedService } from "./homefeed.services.js";
 
 export const getHomeFeed = async (req: Request, res: Response) => {
     try {

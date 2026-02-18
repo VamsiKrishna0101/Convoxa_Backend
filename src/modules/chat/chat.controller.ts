@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { ChatService } from "./chat.services";
+import { ChatService } from "./chat.services.js";
 
 export const createConversation = async (req: Request, res: Response) => {
     try {

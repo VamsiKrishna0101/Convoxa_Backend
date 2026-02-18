@@ -1,4 +1,4 @@
-import prisma from "../../config/prisma";
+import prisma from "../../config/prisma.js";
 
 export class HelpService {
     static async submitRequest(email: string, content: string, userId?: string) {

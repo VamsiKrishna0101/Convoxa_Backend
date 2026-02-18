@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { FeedbackService } from "./feedback.service";
+import { FeedbackService } from "./feedback.service.js";
 
 export class FeedbackController {
     static async submitFeedback(req: Request, res: Response) {

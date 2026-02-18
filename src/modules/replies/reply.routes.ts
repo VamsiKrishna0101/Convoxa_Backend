@@ -1,5 +1,5 @@
 import express from "express";
-import { requireAuth } from "../../middlewares/auth.middleware";
+import { requireAuth } from "../../middlewares/auth.middleware.js";
 import {
     createReply,
     getCommentReplies,

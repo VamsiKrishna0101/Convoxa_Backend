@@ -1,5 +1,5 @@
 import { ReportStatus } from "@prisma/client";
-import prisma from "../../config/prisma";
+import prisma from "../../config/prisma.js";
 
 export interface CreateReportInput {
     reason: string;

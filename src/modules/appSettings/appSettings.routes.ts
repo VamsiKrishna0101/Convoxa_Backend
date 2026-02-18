@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { AppSettingController } from "./appSettings.controller";
-import { requireAuth } from "../../middlewares/auth.middleware";
+import { AppSettingController } from "./appSettings.controller.js";
+import { requireAuth } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 

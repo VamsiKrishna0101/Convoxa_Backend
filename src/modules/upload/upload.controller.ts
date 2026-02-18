@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { generateSignedUploadUrl, SignedUrlInput } from "../../utils/gcp";
+import { generateSignedUploadUrl, SignedUrlInput } from "../../utils/gcp.js";
 
 /**
  * Get a signed URL for uploading images to GCP Storage

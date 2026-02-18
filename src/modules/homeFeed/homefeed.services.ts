@@ -1,6 +1,6 @@
-import prisma from "../../config/prisma"
-import { CursorHelper } from "../common/cursor.helper";
-import { CacheService } from "../common/cache.service";
+import prisma from "../../config/prisma.js"
+import { CursorHelper } from "../common/cursor.helper.js";
+import { CacheService } from "../common/cache.service.js";
 
 
 export class HomeFeedService {

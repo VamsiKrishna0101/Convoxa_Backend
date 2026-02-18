@@ -1,5 +1,5 @@
-import prisma from '../../config/prisma';
-import { ReportInput, ReportOutput } from './report.types';
+import prisma from '../../config/prisma.js';
+import { ReportInput, ReportOutput } from './report.types.js';
 
 export class ReportService {
     static async createReport(input: ReportInput, userId: string): Promise<ReportOutput> {

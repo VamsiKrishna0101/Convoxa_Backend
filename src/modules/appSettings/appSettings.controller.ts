@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AppSettingService } from "./appSettings.service";
+import { AppSettingService } from "./appSettings.service.js";
 
 export class AppSettingController {
     static async getPrivacyPolicy(req: Request, res: Response) {

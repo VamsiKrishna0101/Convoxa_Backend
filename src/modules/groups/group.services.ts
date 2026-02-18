@@ -1,8 +1,8 @@
-import prisma from '../../config/prisma'
-import { NotificationService } from '../notification/notification.services'
-import { getIO } from '../../socket'
-import { redis } from '../../config/redis'
-import { GroupInput, GroupOutput, MessageInput, MessageOutput, EditMessage } from './group.types'
+import prisma from '../../config/prisma.js'
+import { NotificationService } from '../notification/notification.services.js'
+import { getIO } from '../../socket.js'
+import { redis } from '../../config/redis.js'
+import { GroupInput, GroupOutput, MessageInput, MessageOutput, EditMessage } from './group.types.js'
 
 export class GroupService {
     static async createGroup(input: GroupInput, userId: string): Promise<GroupOutput> {

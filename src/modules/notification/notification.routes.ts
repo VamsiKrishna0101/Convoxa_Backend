@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { requireAuth } from "../../middlewares/auth.middleware";
-import { getNotifications, getUnreadCount, markAsRead, createNotification, updateFcmToken, toggleCommunityMute, deleteNotification } from "./notification.controller";
+import { requireAuth } from "../../middlewares/auth.middleware.js";
+import { getNotifications, getUnreadCount, markAsRead, createNotification, updateFcmToken, toggleCommunityMute, deleteNotification } from "./notification.controller.js";
 
 const router = Router();
 

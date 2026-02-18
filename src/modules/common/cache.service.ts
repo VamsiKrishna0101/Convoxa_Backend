@@ -1,4 +1,4 @@
-import { redis } from "../../config/redis";
+import { redis } from "../../config/redis.js";
 
 // TTL Constants (In Seconds)
 // STRICT 5MB LIMIT ENFORCEMENT

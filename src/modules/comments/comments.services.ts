@@ -1,9 +1,9 @@
-import prisma from "../../config/prisma";
-import type { CommentInput, CommentOutput, EditCommentInput, DeleteCommentInput } from "./comment.types";
+import prisma from "../../config/prisma.js";
+import type { CommentInput, CommentOutput, EditCommentInput, DeleteCommentInput } from "./comment.types.js";
 import { NotificationType, NotificationStatus } from "@prisma/client";
-import { NotificationService } from "../notification/notification.services";
-import { CacheService } from "../common/cache.service";
-import { ScoreService } from "../common/score.services";
+import { NotificationService } from "../notification/notification.services.js";
+import { CacheService } from "../common/cache.service.js";
+import { ScoreService } from "../common/score.services.js";
 
 
 export class CommentService {

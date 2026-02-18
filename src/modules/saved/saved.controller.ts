@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { SavedService } from "./saved.services";
+import { SavedService } from "./saved.services.js";
 
 // THREADS
 export const saveThread = async (req: Request, res: Response) => {

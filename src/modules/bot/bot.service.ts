@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import prisma from "../../config/prisma";
-import { botQueue } from "../../config/queue";
-import { BotJobType, CommentOnThreadPayload } from "./bot.types";
+import prisma from "../../config/prisma.js";
+import { botQueue } from "../../config/queue.js";
+import { BotJobType, CommentOnThreadPayload } from "./bot.types.js";
 
 // Direct environment access for Cloud Run reliability
 

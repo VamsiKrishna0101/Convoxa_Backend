@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
-import { chatSocket } from "./chat.socket";
-import { groupSocket } from "./group.socket";
+import { chatSocket } from "./chat.socket.js";
+import { groupSocket } from "./group.socket.js";
 
 export const initSocket = (io: Server) => {
     io.on("connection", (socket) => {

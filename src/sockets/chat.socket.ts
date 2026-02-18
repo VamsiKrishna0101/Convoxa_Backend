@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { ChatService } from "../modules/chat/chat.services";
+import { ChatService } from "../modules/chat/chat.services.js";
 
 export const chatSocket = (io: Server, socket: Socket) => {
     socket.on("join_conversation", (conversationId: string) => {

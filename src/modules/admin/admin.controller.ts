@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { AdminService } from "./admin.services";
+import { AdminService } from "./admin.services.js";
 
 export const getAdminCommunities = async (req: Request, res: Response) => {
     try {

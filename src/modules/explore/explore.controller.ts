@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ExploreService } from "./explore.services";
+import { ExploreService } from "./explore.services.js";
 
 export const getTrendingThreads = async (req: Request, res: Response) => {
     try {

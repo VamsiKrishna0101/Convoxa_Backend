@@ -1,7 +1,7 @@
-import { CommunityInput, CommunityOutput, CommunityRuleInput, CommunityRuleOutput } from "./community.types";
+import { CommunityInput, CommunityOutput, CommunityRuleInput, CommunityRuleOutput } from "./community.types.js";
 import { CommunityTopic, CommunityVisibility } from "@prisma/client";
-import prisma from "../../config/prisma";
-import { CacheService, CACHE_TTL } from "../common/cache.service";
+import prisma from "../../config/prisma.js";
+import { CacheService, CACHE_TTL } from "../common/cache.service.js";
 import crypto from "crypto";
 
 export class CommunityService {

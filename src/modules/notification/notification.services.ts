@@ -1,9 +1,9 @@
-import prisma from "../../config/prisma";
+import prisma from "../../config/prisma.js";
 import { NotificationStatus } from "@prisma/client";
 import { getFirebaseApp } from "../../config/firebase.js";
 import admin from 'firebase-admin';
 
-import { getIO } from "../../socket";
+import { getIO } from "../../socket.js";
 
 // Assuming NotificationType is defined elsewhere or needs to be imported/defined here.
 // For the purpose of this edit, we'll assume it's available or needs to be defined.

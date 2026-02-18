@@ -1,8 +1,8 @@
 import { Job } from 'bullmq';
-import { BotService } from './bot.service';
-import { CommentService } from '../comments/comments.services';
-import prisma from '../../config/prisma';
-import { BotJobPayload } from './bot.types';
+import { BotService } from './bot.service.js';
+import { CommentService } from '../comments/comments.services.js';
+import prisma from '../../config/prisma.js';
+import { BotJobPayload } from './bot.types.js';
 
 export const botProcessor = async (job: Job<BotJobPayload>) => {
     const { type } = job.data;

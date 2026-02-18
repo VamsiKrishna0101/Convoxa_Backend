@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io'
-import { GroupService } from '../modules/groups/group.services'
-import prisma from '../config/prisma'
+import { GroupService } from '../modules/groups/group.services.js'
+import prisma from '../config/prisma.js'
 
 export const groupSocket = (io: Server, socket: Socket) => {
     socket.on("group:join", async (groupId: string) => {

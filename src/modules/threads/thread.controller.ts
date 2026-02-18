@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { ThreadService } from "./thread.services";
+import { ThreadService } from "./thread.services.js";
 
 export const createThread = async (req: Request, res: Response) => {
     try {

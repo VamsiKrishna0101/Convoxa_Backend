@@ -1,6 +1,6 @@
 
-import prisma from "../config/prisma";
-import { ProfileService } from "../modules/profile/profile.services";
+import prisma from "../config/prisma.js";
+import { ProfileService } from "../modules/profile/profile.services.js";
 
 async function main() {
     console.log("Starting Profile Follow Verification...");

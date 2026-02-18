@@ -1,4 +1,4 @@
-import { MessageType } from "../chat/chat.types"
+import { MessageType } from "../chat/chat.types.js"
 
 // Re-export MessageType for consistency
 export { MessageType }

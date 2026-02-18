@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { CommentService } from "./comments.services";
+import { CommentService } from "./comments.services.js";
 
 export const createComment = async (req: Request, res: Response) => {
     try {

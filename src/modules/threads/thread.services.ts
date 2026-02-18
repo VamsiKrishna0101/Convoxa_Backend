@@ -1,11 +1,11 @@
-import { ThreadInput, ThreadOutput, VoteInput } from "./thread.types";
-import prisma from "../../config/prisma";
+import { ThreadInput, ThreadOutput, VoteInput } from "./thread.types.js";
+import prisma from "../../config/prisma.js";
 import { NotificationType, NotificationStatus } from "@prisma/client";
-import { NotificationService } from "../notification/notification.services";
-import { ScoreService } from "../common/score.services";
-import { CacheService, CACHE_TTL } from "../common/cache.service";
-import { redis } from "../../config/redis";
-import { BotService } from "../bot/bot.service";
+import { NotificationService } from "../notification/notification.services.js";
+import { ScoreService } from "../common/score.services.js";
+import { CacheService, CACHE_TTL } from "../common/cache.service.js";
+import { redis } from "../../config/redis.js";
+import { BotService } from "../bot/bot.service.js";
 
 
 export class ThreadService {

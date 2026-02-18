@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { HelpService } from './help.service';
+import { HelpService } from './help.service.js';
 
 export class HelpController {
     static async submitHelpRequest(req: Request, res: Response) {

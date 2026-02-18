@@ -1,7 +1,7 @@
 
-import prisma from "../config/prisma";
-import { CommentService } from "../modules/comments/comments.services";
-import { ReplyService } from "../modules/replies/reply.services";
+import prisma from "../config/prisma.js";
+import { CommentService } from "../modules/comments/comments.services.js";
+import { ReplyService } from "../modules/replies/reply.services.js";
 
 async function main() {
     console.log("Starting Voting Verification...");

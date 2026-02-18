@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { CommunityService } from "./community.services";
+import { CommunityService } from "./community.services.js";
 
 export const create = async (req: Request, res: Response) => {
     try {

@@ -1,6 +1,6 @@
 import express from "express";
-import { requireAuth } from "../../middlewares/auth.middleware";
-import { getHomeFeed } from "./homefeed.controller";
+import { requireAuth } from "../../middlewares/auth.middleware.js";
+import { getHomeFeed } from "./homefeed.controller.js";
 
 const router = express.Router();
 

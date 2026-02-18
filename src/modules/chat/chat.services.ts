@@ -1,9 +1,9 @@
-import { ConversationInput, MessageInput, MessageOutput, DeleteMessageInput, EditMessageInput } from "./chat.types";
-import prisma from "../../config/prisma";
+import { ConversationInput, MessageInput, MessageOutput, DeleteMessageInput, EditMessageInput } from "./chat.types.js";
+import prisma from "../../config/prisma.js";
 import { ConversationStatus } from "@prisma/client";
-import { getIO } from "../../socket";
-import { redis } from "../../config/redis";
-import { NotificationService } from "../notification/notification.services";
+import { getIO } from "../../socket.js";
+import { redis } from "../../config/redis.js";
+import { NotificationService } from "../notification/notification.services.js";
 
 
 export class ChatService {

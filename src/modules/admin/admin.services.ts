@@ -1,6 +1,6 @@
-import prisma from "../../config/prisma";
+import prisma from "../../config/prisma.js";
 
-import { AdminCommunityOutput, MakeModInput } from "./admin.types";
+import { AdminCommunityOutput, MakeModInput } from "./admin.types.js";
 
 export class AdminService {
 

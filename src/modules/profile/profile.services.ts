@@ -1,6 +1,6 @@
-import prisma from "../../config/prisma";
-import { ProfileOutput, UserThreadOutput, UserReplyOutput, UserCommunityOutput, UserBasicInfo } from "./profile.types";
-import { NotificationService } from "../notification/notification.services";
+import prisma from "../../config/prisma.js";
+import { ProfileOutput, UserThreadOutput, UserReplyOutput, UserCommunityOutput, UserBasicInfo } from "./profile.types.js";
+import { NotificationService } from "../notification/notification.services.js";
 import { NotificationType, NotificationStatus } from "@prisma/client";
 
 export class ProfileService {
