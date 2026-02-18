@@ -3,12 +3,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 // Production Log Suppression (Disabled for debugging Cloud Run startup)
 
-if (process.env.NODE_ENV === 'production') {
-    console.log = () => { };
-    console.info = () => { };
-    console.debug = () => { };
-    console.warn = () => { };
-}
+// if (process.env.NODE_ENV === 'production') {
+//     console.log = () => { };
+//     console.info = () => { };
+//     console.debug = () => { };
+//     console.warn = () => { };
+// }
 
 
 import express from 'express'
