@@ -1,13 +1,16 @@
 import dotenv from 'dotenv';
 dotenv.config();
-// Production Log Suppression
+
+// --- DEBUG: LOGS ENABLED ---
+// I've commented this out so we can actually see why Google Cloud is failing.
+/*
 if (process.env.NODE_ENV === 'production') {
     console.log = () => { };
     console.info = () => { };
     console.debug = () => { };
     console.warn = () => { };
 }
-
+*/
 
 import express from 'express'
 import authRoutes from './modules/auth/auth.routes.js'
@@ -34,73 +37,95 @@ import http from "http"
 import jwt from "jsonwebtoken"
 import { initSocket } from './sockets/index.js'
 import { initializeFirebase } from './config/firebase.js'
+import { createWorker, BOT_QUEUE_NAME } from './config/queue.js';
+import { botProcessor } from './modules/bot/bot.worker.js';
 
 const app = express()
 const PORT = process.env.PORT || 8080
 const httpserver = http.createServer(app)
 
-// Initialize external services
-initializeFirebase();
-
-import { createWorker, BOT_QUEUE_NAME } from './config/queue.js';
-import { botProcessor } from './modules/bot/bot.worker.js';
-
-createWorker(botProcessor);
-// console.log(`Worker for queue ${BOT_QUEUE_NAME} started (Convoxa AI)`);
-
-const io = initIO(httpserver)
-
-// Socket authentication middleware
-io.use((socket, next) => {
-    const token = socket.handshake.auth.token
-    if (!token) {
-        return next(new Error("Authentication required"))
-    }
+// Use a wrapper function to catch startup errors
+async function startServer() {
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
-        socket.data.userId = decoded.userId
-        next()
-    } catch (err) {
-        next(new Error("Invalid token"))
+        console.log("🚩 Checkpoint 1: Initializing Firebase...");
+        initializeFirebase();
+        console.log("✅ Firebase Initialized");
+
+        console.log("🚩 Checkpoint 2: Starting BullMQ Worker...");
+        try {
+            // If Redis is missing, this is usually where 'exit(1)' happens
+            createWorker(botProcessor);
+            console.log(`✅ Worker for queue ${BOT_QUEUE_NAME} started`);
+        } catch (workerErr: any) {
+            console.error("❌ Worker failed (Redis issue?):", workerErr.message);
+            // We DON'T crash the whole app here so the web server can still start
+        }
+
+        console.log("🚩 Checkpoint 3: Initializing Sockets...");
+        const io = initIO(httpserver)
+
+        io.use((socket, next) => {
+            const token = socket.handshake.auth.token
+            if (!token) {
+                return next(new Error("Authentication required"))
+            }
+            try {
+                if (!process.env.JWT_SECRET) {
+                    console.error("❌ CRITICAL: JWT_SECRET is undefined in environment!");
+                }
+                const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
+                socket.data.userId = decoded.userId
+                next()
+            } catch (err) {
+                next(new Error("Invalid token"))
+            }
+        })
+
+        initSocket(io)
+        console.log("✅ Sockets Initialized");
+
+        app.use(express.json())
+
+        // Health Check Endpoint
+        app.get('/api/health/vamsi', (req, res) => {
+            res.status(200).json({
+                status: 'UP',
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime(),
+                environment: process.env.NODE_ENV || 'production'
+            });
+        });
+
+        console.log("🚩 Checkpoint 4: Mounting Routes...");
+        app.use("/api/users", authRoutes)
+        app.use("/api/community", communityRoutes)
+        app.use("/api/threads", threadRoutes)
+        app.use("/api/comments", commentRoutes)
+        app.use("/api/replies", replyRoutes)
+        app.use("/api/chat", chatRoutes)
+        app.use("/api/groups", groupRoutes)
+        app.use("/api/profile", profileRoutes)
+        app.use("/api/report", reportRoutes)
+        app.use("/api/admin", adminRoutes)
+        app.use("/api/upload", uploadRoutes)
+        app.use("/api/homefeed", homeFeedRoutes)
+        app.use("/api/explore", exploreRoutes)
+        app.use("/api/saved", savedRoutes)
+        app.use("/api/notifications", notificationRoutes);
+        app.use("/api/settings", appSettingRoutes);
+        app.use("/api/feedback", feedbackRoutes);
+        app.use('/api/help', helpRoutes);
+
+        console.log("🚩 Checkpoint 5: Attempting to Listen...");
+        httpserver.listen(Number(PORT), "0.0.0.0", () => {
+            console.log(`🚀 SERVER RUNNING ON PORT ${PORT}`)
+        })
+
+    } catch (fatalError) {
+        console.error("🛑 FATAL STARTUP ERROR:", fatalError);
+        // Ensure we log before we die
+        process.exit(1);
     }
-})
+}
 
-// Initialize socket handlers
-initSocket(io)
-
-app.use(express.json())
-
-// Health Check Endpoint
-app.get('/api/health/vamsi', (req, res) => {
-    res.status(200).json({
-        status: 'UP',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'production'
-    });
-});
-
-//routes
-app.use("/api/users", authRoutes)
-app.use("/api/community", communityRoutes)
-app.use("/api/threads", threadRoutes)
-app.use("/api/comments", commentRoutes)
-app.use("/api/replies", replyRoutes)
-app.use("/api/chat", chatRoutes)
-app.use("/api/groups", groupRoutes)
-app.use("/api/profile", profileRoutes)
-app.use("/api/report", reportRoutes)
-app.use("/api/admin", adminRoutes)
-app.use("/api/upload", uploadRoutes)
-app.use("/api/homefeed", homeFeedRoutes)
-app.use("/api/explore", exploreRoutes)
-app.use("/api/saved", savedRoutes)
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/settings", appSettingRoutes);
-app.use("/api/feedback", feedbackRoutes);
-app.use('/api/help', helpRoutes);
-
-
-httpserver.listen(Number(PORT), "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`)
-})
+startServer();
