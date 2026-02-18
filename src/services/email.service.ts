@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { env } from '../config/env.js';
+// Direct environment access for Cloud Run reliability
 
 interface SendOtpParams {
     to: string;
@@ -10,7 +10,7 @@ interface SendOtpParams {
 
 export const EmailService = {
     async sendOtp({ to, otp, name = 'User' }: SendOtpParams) {
-        if (!env.BREVO_API_KEY) {
+        if (!process.env.BREVO_API_KEY) {
             console.error('❌ BREVO_API_KEY is missing');
             return false;
         }
@@ -43,7 +43,7 @@ export const EmailService = {
                 {
                     headers: {
                         'accept': 'application/json',
-                        'api-key': env.BREVO_API_KEY,
+                        'api-key': process.env.BREVO_API_KEY,
                         'content-type': 'application/json'
                     }
                 }

@@ -3,9 +3,9 @@ import prisma from "../../config/prisma";
 import { botQueue } from "../../config/queue";
 import { BotJobType, CommentOnThreadPayload } from "./bot.types";
 
-import { env } from "../../config/env";
+// Direct environment access for Cloud Run reliability
 
-const GEMINI_API_KEY = env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 const fallbackModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });

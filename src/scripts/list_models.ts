@@ -1,11 +1,14 @@
-
 import axios from 'axios';
-import { env } from '../config/env.js';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 
+dotenv.config();
+
+// Direct environment access
 async function listModels() {
-    const apiKey = env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
         console.error("❌ GEMINI_API_KEY is missing in .env");

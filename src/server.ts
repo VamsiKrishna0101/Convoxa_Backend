@@ -1,5 +1,6 @@
-
-import { env } from './config/env'
+console.log("🚀 Server starting...");
+import dotenv from 'dotenv';
+dotenv.config();
 // Production Log Suppression (Disabled for debugging Cloud Run startup)
 
 if (process.env.NODE_ENV === 'production') {
@@ -37,7 +38,7 @@ import { initSocket } from './sockets/index.js'
 import { initializeFirebase } from './config/firebase.js'
 
 const app = express()
-const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
+const PORT = process.env.PORT || 8080
 const httpserver = http.createServer(app)
 
 // Initialize external services
@@ -58,7 +59,7 @@ io.use((socket, next) => {
         return next(new Error("Authentication required"))
     }
     try {
-        const decoded = jwt.verify(token, env.JWT_SECRET!) as { userId: string }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
         socket.data.userId = decoded.userId
         next()
     } catch (err) {
@@ -77,7 +78,7 @@ app.get('/api/health/vamsi', (req, res) => {
         status: 'UP',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        environment: env.NODE_ENV || 'production'
+        environment: process.env.NODE_ENV || 'production'
     });
 });
 

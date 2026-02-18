@@ -1,19 +1,14 @@
-
 import { EmailService } from '../services/email.service.js';
 import dotenv from 'dotenv';
-import { env } from '../config/env.js';
 
-// Force load env with override
-dotenv.config({ override: true });
+// Force load env
+dotenv.config();
 
-async function testEmail() {
+// Direct environment access
+async function testBrevo() {
     console.log("📧 Testing Brevo Email Service...");
-    console.log("🔑 API Key present:", !!env.BREVO_API_KEY);
+    console.log('Using API Key:', process.env.BREVO_API_KEY ? 'Present' : 'Missing');
 
-    // Replace this with a valid email for testing if needed, 
-    // but for now let's try to send to a dummy or the user's email if we knew it.
-    // I will ask the user to run this and maybe edit it? 
-    // Or I can just put a placeholder.
     const TEST_EMAIL = "vklvl0101@gmail.com"; // Self-send test
 
     console.log(`📤 Attempting to send to: ${TEST_EMAIL}`);
@@ -31,4 +26,4 @@ async function testEmail() {
     }
 }
 
-testEmail();
+testBrevo();
