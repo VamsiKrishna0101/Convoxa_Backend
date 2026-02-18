@@ -1,14 +1,14 @@
 
 import { env } from './config/env'
 // Production Log Suppression (Disabled for debugging Cloud Run startup)
-/*
+
 if (process.env.NODE_ENV === 'production') {
     console.log = () => { };
     console.info = () => { };
     console.debug = () => { };
     console.warn = () => { };
 }
-*/
+
 
 import express from 'express'
 import authRoutes from './modules/auth/auth.routes.js'
@@ -37,7 +37,7 @@ import { initSocket } from './sockets/index.js'
 import { initializeFirebase } from './config/firebase.js'
 
 const app = express()
-const PORT = env.PORT || 4000
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
 const httpserver = http.createServer(app)
 
 // Initialize external services
