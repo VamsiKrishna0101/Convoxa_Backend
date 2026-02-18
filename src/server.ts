@@ -3,14 +3,14 @@ dotenv.config();
 
 // --- DEBUG: LOGS ENABLED ---
 // I've commented this out so we can actually see why Google Cloud is failing.
-/*
+
 if (process.env.NODE_ENV === 'production') {
     console.log = () => { };
     console.info = () => { };
     console.debug = () => { };
     console.warn = () => { };
 }
-*/
+
 
 import express from 'express'
 import authRoutes from './modules/auth/auth.routes.js'
