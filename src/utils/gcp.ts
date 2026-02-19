@@ -11,8 +11,8 @@ const __dirname = path.dirname(__filename);
 // Initialize GCS client with explicit credentials path relative to this file
 // We check multiple possible locations to be robust (src/utils vs dist/utils)
 const possiblePaths = [
-    path.join(process.cwd(), "secrets", "gcp-service-account.json"),
-    path.join(__dirname, "..", "..", "secrets", "gcp-service-account.json"),
+    path.join(process.cwd(), "secrets", "gcp-service-account"),
+    path.join(__dirname, "..", "..", "secrets", "gcp-service-account"),
     process.env.GOOGLE_APPLICATION_CREDENTIALS
 ].filter(Boolean) as string[];
 

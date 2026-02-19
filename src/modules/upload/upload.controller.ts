@@ -50,10 +50,16 @@ export async function getSignedUploadUrl(req: Request, res: Response) {
             });
         }
 
-        // console.error("Error generating signed URL:", error);
+        console.error("❌ Error generating signed URL:", {
+            message: error.message,
+            stack: error.stack,
+            body: req.body
+        });
+
         return res.status(500).json({
             success: false,
-            error: "INTERNAL_SERVER_ERROR"
+            error: "INTERNAL_SERVER_ERROR",
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 }

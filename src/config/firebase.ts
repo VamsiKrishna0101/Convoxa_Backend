@@ -7,7 +7,7 @@ let firebaseApp: admin.app.App | null = null;
 export const initializeFirebase = () => {
     try {
         // Look for service account file in secrets folder
-        const serviceAccountPath = path.join(process.cwd(), 'secrets', 'adda-bc00e-firebase-adminsdk-fbsvc-823dfd4e3d.json');
+        const serviceAccountPath = path.join(process.cwd(), 'firebase-secrets', 'adda-bc00e-firebase-adminsdk-fbsvc-823dfd4e3d');
 
         if (fs.existsSync(serviceAccountPath)) {
             const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
