@@ -49,6 +49,7 @@ export type UserCommunityOutput = {
     id: string
     name: string
     description: string
+    imageUrl: string
     role: string
     joinedAt: Date
 }

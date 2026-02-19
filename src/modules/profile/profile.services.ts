@@ -159,6 +159,7 @@ export class ProfileService {
             id: member.community.id,
             name: member.community.name,
             description: member.community.description,
+            imageUrl: member.community.imageUrl,
             role: member.role,
             joinedAt: member.joinedAt
         }))

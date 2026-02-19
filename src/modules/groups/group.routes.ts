@@ -10,7 +10,8 @@ import {
     deleteGroupMessage,
     markAsRead,
     toggleMute,
-    leaveGroup
+    leaveGroup,
+    getGroupDetails
 } from "./group.controller.js";
 
 const router = express.Router();
@@ -40,7 +41,13 @@ router.delete("/messages", requireAuth, deleteGroupMessage);
 // Mute Group
 router.post("/:groupId/mute", requireAuth, toggleMute);
 
+// Mark as read
+router.post("/:groupId/read", requireAuth, markAsRead);
+
 // Leave Group
 router.post("/:groupId/leave", requireAuth, leaveGroup);
+
+// Get Group Details
+router.get("/:groupId", requireAuth, getGroupDetails);
 
 export default router;

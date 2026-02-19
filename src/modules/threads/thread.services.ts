@@ -229,7 +229,7 @@ export class ThreadService {
 
         if (!community) throw new Error("COMMUNITY_NOT_FOUND");
 
-        const whereClause: any = { communityId, isDeleted: false };
+        const whereClause: any = { communityId };
         if (search) {
             whereClause.OR = [
                 { title: { contains: search, mode: 'insensitive' } },
@@ -306,7 +306,7 @@ export class ThreadService {
         if (!user) throw new Error("USER_NOT_FOUND");
 
         const threads = await prisma.thread.findMany({
-            where: { authorId: userId, isDeleted: false },
+            where: { authorId: userId },
             take: limit + 1,
             skip: cursor ? 1 : 0,
             cursor: cursor ? { id: cursor } : undefined,

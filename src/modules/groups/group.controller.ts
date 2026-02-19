@@ -156,3 +156,20 @@ export async function leaveGroup(req: Request, res: Response) {
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
+
+export async function getGroupDetails(req: Request, res: Response) {
+    try {
+        const userId = req.user!.userId;
+        const { groupId } = req.params;
+        const result = await GroupService.getGroupDetails(String(groupId), userId);
+        return res.status(200).json({ success: true, result });
+    } catch (error: any) {
+        if (error.message === "NOT_A_MEMBER") {
+            return res.status(403).json({ success: false, message: "Not a member of the group" });
+        }
+        if (error.message === "GROUP_NOT_FOUND") {
+            return res.status(404).json({ success: false, message: "Group not found" });
+        }
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}

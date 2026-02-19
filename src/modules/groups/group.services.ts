@@ -2,7 +2,7 @@ import prisma from '../../config/prisma.js'
 import { NotificationService } from '../notification/notification.services.js'
 import { getIO } from '../../socket.js'
 import { redis } from '../../config/redis.js'
-import { GroupInput, GroupOutput, MessageInput, MessageOutput, EditMessage } from './group.types.js'
+import { GroupInput, GroupOutput, MessageInput, MessageOutput, EditMessage, GroupMessageOutput } from './group.types.js'
 
 export class GroupService {
     static async createGroup(input: GroupInput, userId: string): Promise<GroupOutput> {
@@ -297,6 +297,28 @@ export class GroupService {
         return { success: true }
     }
 
+    static async getGroupDetails(groupId: string, userId: string): Promise<GroupOutput> {
+        const membership = await prisma.groupParticipant.findUnique({
+            where: { groupId_userId: { groupId, userId } }
+        });
+        if (!membership) throw new Error("NOT_A_MEMBER");
+
+        const group = await prisma.group.findUnique({
+            where: { id: groupId }
+        });
+        if (!group) throw new Error("GROUP_NOT_FOUND");
+
+        return {
+            id: group.id,
+            name: group.name,
+            description: group.description,
+            imageUrl: group.imageUrl,
+            inviteCode: group.inviteCode,
+            ownerId: group.ownerId,
+            createdAt: group.createdAt
+        };
+    }
+
     static async getGroupMessages(groupId: string, userId: string, cursor?: string, limit: number = 20) {
         const membership = await prisma.groupParticipant.findUnique({
             where: {
@@ -311,7 +333,7 @@ export class GroupService {
         })
         if (!membership) throw new Error("NOT_A_MEMBER")
 
-        const cacheKey = `group:${groupId}:messages`;
+        const cacheKey = `group: ${groupId}: messages`;
 
         // Redis Check (only for first page)
         if (!cursor) {
@@ -409,16 +431,83 @@ export class GroupService {
         }
     }
 
-    static async getMyGroups(userId: string) {
-        const mygroups = await prisma.groupParticipant.findMany({
-            where: {
-                userId
-            },
+    static async getMyGroups(userId: string): Promise<GroupOutput[]> {
+        const memberships = await prisma.groupParticipant.findMany({
+            where: { userId },
             include: {
-                group: true
+                group: {
+                    include: {
+                        messages: {
+                            orderBy: { createdAt: 'desc' },
+                            take: 1,
+                            where: { isDeleted: false },
+                            include: {
+                                sender: {
+                                    select: {
+                                        id: true,
+                                        username: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        })
-        return mygroups.map((g: any) => g.group)
+        });
+
+        const groupsWithCounts = await Promise.all(memberships.map(async (m) => {
+            const group = m.group;
+            const lastMessageRaw = group.messages[0];
+
+            let unreadCount = 0;
+            if (m.lastReadAt) {
+                unreadCount = await prisma.groupMessage.count({
+                    where: {
+                        groupId: group.id,
+                        createdAt: { gt: m.lastReadAt },
+                        isDeleted: false
+                    }
+                });
+            } else {
+                // If never read, count all messages
+                unreadCount = await prisma.groupMessage.count({
+                    where: {
+                        groupId: group.id,
+                        isDeleted: false
+                    }
+                });
+            }
+
+            const lastMessage: GroupMessageOutput | null = lastMessageRaw ? {
+                id: lastMessageRaw.id,
+                groupId: lastMessageRaw.groupId,
+                senderId: lastMessageRaw.senderId,
+                content: lastMessageRaw.content,
+                type: lastMessageRaw.type as any,
+                mediaUrl: lastMessageRaw.mediaUrl,
+                createdAt: lastMessageRaw.createdAt.toISOString(),
+                sender: lastMessageRaw.sender
+            } : null;
+
+            return {
+                id: group.id,
+                name: group.name,
+                description: group.description,
+                imageUrl: group.imageUrl,
+                inviteCode: group.inviteCode,
+                ownerId: group.ownerId,
+                createdAt: group.createdAt,
+                lastMessage,
+                unreadCount
+            };
+        }));
+
+        // Sort by last message date
+        return groupsWithCounts.sort((a, b) => {
+            const timeA = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : new Date(a.createdAt).getTime();
+            const timeB = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : new Date(b.createdAt).getTime();
+            return timeB - timeA;
+        });
     }
     static async toggleMute(groupId: string, userId: string, isMuted: boolean) {
         const membership = await prisma.groupParticipant.findUnique({

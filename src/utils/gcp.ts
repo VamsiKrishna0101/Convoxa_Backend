@@ -9,16 +9,31 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize GCS client with explicit credentials path relative to this file
-const localCredentialsPath = path.join(__dirname, "..", "..", "secrets", "gcp-service-account.json");
+// We check multiple possible locations to be robust (src/utils vs dist/utils)
+const possiblePaths = [
+    path.join(process.cwd(), "secrets", "gcp-service-account.json"),
+    path.join(__dirname, "..", "..", "secrets", "gcp-service-account.json"),
+    process.env.GOOGLE_APPLICATION_CREDENTIALS
+].filter(Boolean) as string[];
 
-// Prioritize local credentials file if it exists, otherwise use environment variable
-const credentialsPath = fs.existsSync(localCredentialsPath)
-    ? localCredentialsPath
-    : (process.env.GOOGLE_APPLICATION_CREDENTIALS || localCredentialsPath);
+let credentialsPath = "";
+for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+        credentialsPath = p;
+        break;
+    }
+}
 
-const storage = new Storage({
-    keyFilename: credentialsPath
-});
+if (!credentialsPath && process.env.NODE_ENV !== 'production') {
+    console.warn("⚠️ GCS Credentials not found. Signed URLs will fail.");
+}
+
+const storageOptions: any = {};
+if (credentialsPath) {
+    storageOptions.keyFilename = credentialsPath;
+}
+
+const storage = new Storage(storageOptions);
 
 // Multiple buckets for different content types
 const BUCKETS = {

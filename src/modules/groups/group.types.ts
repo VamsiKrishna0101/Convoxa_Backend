@@ -17,6 +17,8 @@ export type GroupOutput = Readonly<{
     inviteCode?: string,
     ownerId: string,
     createdAt: Date,
+    lastMessage?: GroupMessageOutput | null,
+    unreadCount?: number,
 }>
 
 export type MessageInput = {
