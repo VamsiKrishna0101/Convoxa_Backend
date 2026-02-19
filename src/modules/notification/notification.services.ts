@@ -1,20 +1,6 @@
 import prisma from "../../config/prisma.js";
-import { NotificationStatus } from "@prisma/client";
-import { getFirebaseApp } from "../../config/firebase.js";
-import admin from 'firebase-admin';
-
+import { NotificationStatus, NotificationType } from "@prisma/client";
 import { getIO } from "../../socket.js";
-
-// Assuming NotificationType is defined elsewhere or needs to be imported/defined here.
-// For the purpose of this edit, we'll assume it's available or needs to be defined.
-// If NotificationType is also from notification.types, it would need to be moved or re-imported.
-// For now, let's assume it's a simple string or enum that might be defined in this file or globally.
-// If it's an enum from Prisma, it would be @prisma/client.
-// Let's add a placeholder for NotificationType if it's not from @prisma/client.
-// Based on the context, it's likely an enum like "UPVOTED_THREAD", "NEW_THREAD", etc.
-// If it's from @prisma/client, it would be NotificationType.
-// Let's assume it's NotificationType from @prisma/client for now, as NotificationStatus is.
-import { NotificationType } from "@prisma/client";
 
 export interface NotificationCreateInput {
     content: string;
@@ -25,106 +11,95 @@ export interface NotificationCreateInput {
     commentId?: string;
     replyId?: string;
     status?: NotificationStatus;
-    customThrottleMinutes?: number; // Optional custom throttle
+    customThrottleMinutes?: number;
 }
 
 export class NotificationService {
-    // Check if user is connected to any socket in their private room
+
     static async isUserOnline(userId: string): Promise<boolean> {
         try {
             const sockets = await getIO().in(`user:${userId}`).fetchSockets();
             return sockets.length > 0;
-        } catch (error) {
-            // console.error("Error checking online status:", error);
+        } catch {
             return false;
         }
     }
 
-
     /**
-     * Sends a push notification to a specific user
+     * ✅ SEND PUSH NOTIFICATION USING EXPO PUSH SERVICE
      */
-    static async sendPushNotification(userId: string, title: string, body: string, data?: any, imageUrl?: string) {
+    static async sendPushNotification(
+        userId: string,
+        title: string,
+        body: string,
+        data?: any,
+        imageUrl?: string
+    ) {
         try {
             const user = await prisma.user.findUnique({
                 where: { id: userId },
                 select: { expopushtoken: true } as any
             });
 
-            if (!(user as any)?.expopushtoken) {
+            const expoToken = (user as any)?.expopushtoken;
+
+            if (!expoToken || !expoToken.startsWith("ExponentPushToken")) {
+                console.log("Invalid or missing Expo push token");
                 return;
             }
 
-            // FCM data payload MUST be [key: string]: string
-            const stringData: { [key: string]: string } = {};
-            if (data) {
-                Object.keys(data).forEach(key => {
-                    if (data[key] !== undefined && data[key] !== null) {
-                        stringData[key] = String(data[key]);
-                    }
-                });
-            }
-
-            const message: admin.messaging.Message = {
-                token: (user as any).expopushtoken,
-                notification: {
-                    title,
-                    body,
-                    imageUrl: imageUrl || undefined
-                },
-                data: stringData,
-                android: {
-                    priority: 'high',
-                    notification: {
-                        sound: 'default',
-                        channelId: 'default',
-                        imageUrl: imageUrl || undefined, // Displayed as Big Picture on Android
-                        // icon: 'ic_notification', // Optional: Custom small icon if resource exists
-                        color: '#82C8E5' // Brand Color (BLUESKY)
-                    }
-                },
-                apns: {
-                    payload: {
-                        aps: {
-                            'mutable-content': 1
-                        }
-                    },
-                    fcmOptions: imageUrl ? {
-                        imageUrl
-                    } : undefined
-                }
+            const message = {
+                to: expoToken,
+                sound: "default",
+                title,
+                body,
+                data: data || {},
+                ...(imageUrl && { imageUrl })
             };
 
-            const app = getFirebaseApp();
-            if (!app) return;
+            const response = await fetch("https://exp.host/--/api/v2/push/send", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(message)
+            });
 
-            await app.messaging().send(message);
+            const result = await response.json();
+            console.log("Expo push response:", result);
+
+            // Handle invalid/unregistered tokens
+            if (result?.data?.[0]?.status === "error") {
+                console.log("Expo push error:", result.data[0]);
+
+                if (result.data[0]?.details?.error === "DeviceNotRegistered") {
+                    await prisma.user.update({
+                        where: { id: userId },
+                        data: { expopushtoken: null } as any
+                    });
+                }
+            }
+
         } catch (error) {
-            // console.error("Failed to send push notification:", error);
+            console.error("Failed to send Expo push notification:", error);
         }
     }
 
     /**
-     * Create a new notification
-     * Checks if a similar notification exists to avoid spam (e.g., duplicate likes)
+     * CREATE NOTIFICATION ENTRY
      */
     static async createNotification(data: NotificationCreateInput) {
-        // Prevent self-notifications
+
         if (data.senderId && data.receiverId && data.senderId === data.receiverId) {
             return null;
         }
-
-        // Check for duplicates (e.g. upvoting same thread multiple times shouldn't spam, causing unique constraint errors if not handled, though logic usually prevents re-votes)
-        // For simple MVP, we just create. 
-        // Improvement: If UNREAD notification of same type/thread/sender exists, update createdAt instead of new row? 
-        // For now, let's just insert.
 
         try {
             const notification = await prisma.notification.create({
                 data: {
                     content: data.content,
                     type: data.type,
-                    status: "UNREAD", // Default
+                    status: "UNREAD",
                     recipientId: data.receiverId,
                     senderId: data.senderId,
                     threadId: data.threadId,
@@ -133,32 +108,23 @@ export class NotificationService {
                 }
             });
 
-            // Emit Real-time Notification
             try {
                 getIO().to(data.receiverId).emit("notification", notification);
-            } catch (err) {
-                // console.error("Socket emission failed:", err);
-            }
+            } catch {}
 
             return notification;
-        } catch (error) {
-            // console.error("Failed to create notification:", error);
-            // Don't throw, just return null so main flow isn't interrupted
+
+        } catch {
             return null;
         }
     }
 
-    /**
-     * Get notifications for a user
-     */
     static async getUserNotifications(userId: string, limit: number = 20, cursor?: string) {
 
         const notifications = await prisma.notification.findMany({
             where: { recipientId: userId },
             include: {
-                sender: {
-                    select: { id: true, username: true } // Minimal user info
-                },
+                sender: { select: { id: true, username: true } },
                 thread: {
                     select: { id: true, title: true, imageUrl: true, community: { select: { imageUrl: true } } }
                 },
@@ -184,23 +150,20 @@ export class NotificationService {
             take: limit,
             skip: cursor ? 1 : 0,
             cursor: cursor ? { id: cursor } : undefined,
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: "desc" }
         });
 
-        // Calculate next cursor
         let nextCursor: string | null = null;
         if (notifications.length > 0) {
             nextCursor = notifications[notifications.length - 1].id;
         }
 
-        // Flatten/Enrich the response
-        const enrichedNotifications = notifications.map((n: any) => {
+        const enriched = notifications.map((n: any) => {
             let threadName = n.thread?.title;
             let threadId = n.thread?.id;
             let threadImageUrl = n.thread?.imageUrl;
             let communityImageUrl = n.thread?.community?.imageUrl;
 
-            // If direct thread is missing, look in comment
             if (!threadName && n.comment?.thread) {
                 threadName = n.comment.thread.title;
                 threadId = n.comment.thread.id;
@@ -208,7 +171,6 @@ export class NotificationService {
                 communityImageUrl = n.comment.thread.community?.imageUrl;
             }
 
-            // If still missing, look in reply -> comment -> thread
             if (!threadName && n.reply?.comment?.thread) {
                 threadName = n.reply.comment.thread.title;
                 threadId = n.reply.comment.thread.id;
@@ -222,94 +184,59 @@ export class NotificationService {
                 type: n.type,
                 status: n.status,
                 createdAt: n.createdAt,
-                avatarConfig: (n.sender as any)?.avatarConfig,
                 sender: n.sender ? {
                     id: n.sender.id,
-                    username: n.sender.username,
-                    avatarConfig: (n.sender as any).avatarConfig
+                    username: n.sender.username
                 } : null,
                 threadId: threadId || null,
                 threadName: threadName || null,
                 threadImageUrl: threadImageUrl || null,
                 communityImageUrl: communityImageUrl || null,
-                username: n.sender?.username || null,
                 commentId: n.comment?.id || null,
-                replyId: n.reply?.id || null,
+                replyId: n.reply?.id || null
             };
         });
 
-        return {
-            notifications: enrichedNotifications,
-            nextCursor
-        };
+        return { notifications: enriched, nextCursor };
     }
 
-
-    /**
-     * Get unread count
-     */
     static async getUnreadCount(userId: string) {
-        return await prisma.notification.count({
-            where: {
-                recipientId: userId,
-                status: "UNREAD"
-            }
+        return prisma.notification.count({
+            where: { recipientId: userId, status: "UNREAD" }
         });
     }
 
-    /**
-     * Mark notifications as read
-     * If notificationId is provided, mark one. If not, mark all for user.
-     */
     static async markAsRead(userId: string, notificationId?: string) {
         if (notificationId) {
-            return await prisma.notification.update({
-                where: {
-                    id: notificationId,
-                    recipientId: userId // Security check
-                },
+            return prisma.notification.update({
+                where: { id: notificationId, recipientId: userId },
                 data: { status: "READ" }
             });
         } else {
-            // Mark all
-            return await prisma.notification.updateMany({
-                where: {
-                    recipientId: userId,
-                    status: "UNREAD"
-                },
+            return prisma.notification.updateMany({
+                where: { recipientId: userId, status: "UNREAD" },
                 data: { status: "READ" }
             });
         }
     }
 
-    /**
-     * Update user's FCM token for push notifications
-     */
     static async updateFcmToken(userId: string, expopushtoken: string) {
-        return await prisma.user.update({
+        return prisma.user.update({
             where: { id: userId },
             data: { expopushtoken } as any
         });
     }
 
-    /**
-     * Toggle community mute setting for a user
-     */
     static async toggleCommunityMute(userId: string, communityId: string, isMuted: boolean) {
-        return await prisma.communityMember.update({
-            where: {
-                userId_communityId: { userId, communityId }
-            },
+        return prisma.communityMember.update({
+            where: { userId_communityId: { userId, communityId } },
             data: { isMuted } as any
         });
     }
 
     static async deleteNotification(userId: string, notificationId: string) {
-        return await prisma.notification.delete({
-            where: {
-                id: notificationId,
-                recipientId: userId
-            }
-        })
+        return prisma.notification.delete({
+            where: { id: notificationId, recipientId: userId }
+        });
     }
 }
