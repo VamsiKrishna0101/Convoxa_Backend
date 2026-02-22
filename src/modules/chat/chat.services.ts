@@ -177,7 +177,7 @@ export class ChatService {
         try {
             getIO().to(conversationId!).emit("receive_message", messageOutput);
 
-            // Trigger Push Notifications for offline participants
+            // Parallelize Push Notifications for offline participants
             const participants = await prisma.conversationParticipant.findMany({
                 where: {
                     conversationId,
@@ -186,8 +186,8 @@ export class ChatService {
                 select: { userId: true, isMuted: true } as any // Include isMuted
             });
 
-            for (const p of participants) {
-                if (p.isMuted) continue; // Skip if muted
+            await Promise.all(participants.map(async (p) => {
+                if (p.isMuted) return;
 
                 const isOnline = await NotificationService.isUserOnline(p.userId);
                 if (!isOnline) {
@@ -203,9 +203,11 @@ export class ChatService {
                         truncatedContent, // Body: Message Content
                         { conversationId, type: "NEW_MESSAGE", senderId: messageOutput.senderId },
                         notificationImage
-                    );
+                    ).catch(err => {
+                        // console.error("Push failed for user", p.userId, err);
+                    });
                 }
-            }
+            }));
 
             // Update Conversation updatedAt
             await prisma.conversation.update({

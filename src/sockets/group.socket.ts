@@ -36,22 +36,11 @@ export const groupSocket = (io: Server, socket: Socket) => {
 
         const userId = socket.data.userId
         const messageTempId = tempId || `temp-${Date.now()}`
-        const tempMessage = {
-            id: messageTempId,
-            groupId: groupId,
-            senderId: userId,
-            content,
-            username,
-            createdAt: new Date().toISOString()
-        }
-
-        // Optimistic update to everyone in the group - REMOVED -> Service emits "receive_group_message"
-        // io.to(groupId).emit("group:new_message", tempMessage)
 
         try {
             const savedMessage = await GroupService.sendMessage({ groupId, content }, userId)
-
-            // Confirm save to sender so they can replace tempId
+            // NOTE: GroupService.sendMessage already broadcasts "receive_group_message" to the room.
+            // We only need to ack back to the sender with the real ID.
             socket.emit("group:message_saved", {
                 tempId: messageTempId,
                 realId: savedMessage.id,
@@ -59,7 +48,6 @@ export const groupSocket = (io: Server, socket: Socket) => {
                 createdAt: savedMessage.createdAt
             })
         } catch (error: any) {
-            // Notify sender of failure
             socket.emit("group:message_error", {
                 tempId: messageTempId,
                 error: error.message

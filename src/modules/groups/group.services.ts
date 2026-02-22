@@ -157,7 +157,7 @@ export class GroupService {
         try {
             getIO().to(groupId).emit("receive_group_message", messageOutput)
 
-            // Notify offline members
+            // Parallelize notifications for offline members
             const groupMembers = await prisma.groupParticipant.findMany({
                 where: {
                     groupId,
@@ -168,8 +168,8 @@ export class GroupService {
 
             const group = await prisma.group.findUnique({ where: { id: groupId }, select: { name: true } });
 
-            for (const member of groupMembers) {
-                if (member.isMuted) continue; // Skip if muted
+            await Promise.all(groupMembers.map(async (member) => {
+                if (member.isMuted) return;
 
                 const isOnline = await NotificationService.isUserOnline(member.userId);
                 if (!isOnline) {
@@ -182,9 +182,11 @@ export class GroupService {
                         `${messageOutput.sender.username} in ${group?.name || 'Group'}`,
                         truncatedContent,
                         { groupId, type: "NEW_GROUP_MESSAGE", senderId: messageOutput.senderId }
-                    );
+                    ).catch(err => {
+                        // console.error("Push failed for group member", member.userId, err);
+                    });
                 }
-            }
+            }));
 
         } catch (error) {
             // console.error("Socket emission/Notification failed", error)
@@ -333,7 +335,7 @@ export class GroupService {
         })
         if (!membership) throw new Error("NOT_A_MEMBER")
 
-        const cacheKey = `group: ${groupId}: messages`;
+        const cacheKey = `group:${groupId}:messages`; // no spaces — must match sendMessage key
 
         // Redis Check (only for first page)
         if (!cursor) {

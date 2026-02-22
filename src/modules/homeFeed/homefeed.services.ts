@@ -216,7 +216,7 @@ export class HomeFeedService {
             data: finalFeed.map(t => ({
                 id: t.id,
                 title: t.title,
-                content: t.content.length > 300 ? t.content.substring(0, 300) + "..." : t.content,
+                content: t.content,
                 imageUrl: t.imageUrl,
                 upvotes: t.upvotes,
                 downvotes: t.downvotes || 0,

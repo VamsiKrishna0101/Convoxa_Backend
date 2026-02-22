@@ -11,7 +11,9 @@ const __dirname = path.dirname(__filename);
 // Initialize GCS client with explicit credentials path relative to this file
 // We check multiple possible locations to be robust (src/utils vs dist/utils)
 const possiblePaths = [
+    path.join(process.cwd(), "secrets", "gcp-service-account.json"),
     path.join(process.cwd(), "secrets", "gcp-service-account"),
+    path.join(__dirname, "..", "..", "secrets", "gcp-service-account.json"),
     path.join(__dirname, "..", "..", "secrets", "gcp-service-account"),
     process.env.GOOGLE_APPLICATION_CREDENTIALS
 ].filter(Boolean) as string[];
@@ -24,8 +26,10 @@ for (const p of possiblePaths) {
     }
 }
 
-if (!credentialsPath && process.env.NODE_ENV !== 'production') {
-    console.warn("⚠️ GCS Credentials not found. Signed URLs will fail.");
+if (!credentialsPath) {
+    console.warn("⚠️ GCS Credentials not found at any of the following locations:");
+    possiblePaths.forEach(p => console.warn(`   - ${p}`));
+    console.warn("   Signed URLs will fail. Ensure gcp-service-account.json is in the secrets folder.");
 }
 
 const storageOptions: any = {};

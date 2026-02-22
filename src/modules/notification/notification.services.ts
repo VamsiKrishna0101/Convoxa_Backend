@@ -1,7 +1,12 @@
 import prisma from "../../config/prisma.js";
 import { NotificationStatus, NotificationType } from "@prisma/client";
+import { getFirebaseApp } from "../../config/firebase.js";
+import admin from 'firebase-admin';
+import { Expo } from 'expo-server-sdk';
 import { getIO } from "../../socket.js";
 
+// Initialize Expo SDK
+const expo = new Expo();
 export interface NotificationCreateInput {
     content: string;
     type: NotificationType;
@@ -41,47 +46,80 @@ export class NotificationService {
                 select: { expopushtoken: true } as any
             });
 
-            const expoToken = (user as any)?.expopushtoken;
-
-            if (!expoToken || !expoToken.startsWith("ExponentPushToken")) {
-                console.log("Invalid or missing Expo push token");
+            const pushToken = (user as any)?.expopushtoken;
+            if (!pushToken) {
                 return;
             }
 
-            const message = {
-                to: expoToken,
-                sound: "default",
-                title,
-                body,
-                data: data || {},
-                ...(imageUrl && { imageUrl })
-            };
+            // CASE 1: EXPO PUSH TOKEN
+            if (Expo.isExpoPushToken(pushToken)) {
+                const messages = [{
+                    to: pushToken,
+                    sound: 'default' as const,
+                    title,
+                    body,
+                    data: data || {},
+                    priority: 'high' as const,
+                    channelId: 'default',
+                    // Expo supports imageUrl via data or attachments, but for simple display:
+                    ...(imageUrl ? { _displayInForeground: true, _contentAvailable: true } : {})
+                }];
 
-            const response = await fetch("https://exp.host/--/api/v2/push/send", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(message)
-            });
-
-            const result = await response.json();
-            console.log("Expo push response:", result);
-
-            // Handle invalid/unregistered tokens
-            if (result?.data?.[0]?.status === "error") {
-                console.log("Expo push error:", result.data[0]);
-
-                if (result.data[0]?.details?.error === "DeviceNotRegistered") {
-                    await prisma.user.update({
-                        where: { id: userId },
-                        data: { expopushtoken: null } as any
-                    });
+                try {
+                    const ticketChunk = await expo.sendPushNotificationsAsync(messages);
+                    // console.log("Expo Push Ticket:", ticketChunk);
+                } catch (error) {
+                    // console.error("Error sending Expo Push:", error);
                 }
+                return;
             }
 
+            // CASE 2: FIREBASE / OTHER (FALLBACK)
+            // FCM data payload MUST be [key: string]: string
+            const stringData: { [key: string]: string } = {};
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    if (data[key] !== undefined && data[key] !== null) {
+                        stringData[key] = String(data[key]);
+                    }
+                });
+            }
+
+            const message: admin.messaging.Message = {
+                token: pushToken,
+                notification: {
+                    title,
+                    body,
+                    imageUrl: imageUrl || undefined
+                },
+                data: stringData,
+                android: {
+                    priority: 'high',
+                    notification: {
+                        sound: 'default',
+                        channelId: 'default',
+                        imageUrl: imageUrl || undefined, // Displayed as Big Picture on Android
+                        color: '#82C8E5' // Brand Color (BLUESKY)
+                    }
+                },
+                apns: {
+                    payload: {
+                        aps: {
+                            'mutable-content': 1
+                        }
+                    },
+                    fcmOptions: imageUrl ? {
+                        imageUrl
+                    } : undefined
+                }
+            };
+
+            const app = getFirebaseApp();
+            if (!app) return;
+
+            await app.messaging().send(message);
         } catch (error) {
-            console.error("Failed to send Expo push notification:", error);
+            // console.error("Failed to send push notification:", error);
         }
     }
 
@@ -110,7 +148,7 @@ export class NotificationService {
 
             try {
                 getIO().to(data.receiverId).emit("notification", notification);
-            } catch {}
+            } catch { }
 
             return notification;
 
