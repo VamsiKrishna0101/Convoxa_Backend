@@ -88,13 +88,23 @@ export class CommentService {
 
             await NotificationService.createNotification({
                 content: `${isAnonymous ? "Anonymous" : user.username} commented: "${truncatedContent}" on your thread: "${truncatedTitle}"`,
-
                 type: NotificationType.REPLY_TO_THREAD,
                 status: NotificationStatus.UNREAD,
                 receiverId: thread.authorId,
                 senderId: userId,
                 threadId: thread.id,
                 commentId: comment.id
+            });
+
+            // Send Push Notification to Thread Author
+            await NotificationService.sendPushNotification(
+                thread.authorId,
+                `New Comment on: ${truncatedTitle}`,
+                `${isAnonymous ? "Anonymous" : user.username}: ${truncatedContent}`,
+                { type: "REPLY_TO_THREAD", threadId: thread.id, commentId: comment.id },
+                comment.imageUrl || undefined
+            ).catch(err => {
+                // console.error("Comment push failed", err);
             });
         }
 

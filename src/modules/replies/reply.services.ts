@@ -99,6 +99,17 @@ export class ReplyService {
                 replyId: reply.id,
                 threadId: comment.threadId
             });
+
+            // Send Push Notification
+            await NotificationService.sendPushNotification(
+                comment.authorId,
+                `New Reply to your comment`,
+                `${isAnonymous ? "Anonymous" : user.username}: ${truncatedReply}`,
+                { type: "REPLY_TO_COMMENT", threadId: comment.threadId, commentId: comment.id, replyId: reply.id },
+                reply.imageUrl || undefined
+            ).catch(err => {
+                // console.error("Reply push failed", err);
+            });
         }
 
         return {

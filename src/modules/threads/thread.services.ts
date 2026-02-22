@@ -103,8 +103,8 @@ export class ThreadService {
                 select: { userId: true }
             });
 
-            for (const member of membersToNotify) {
-                // Check Redis for 2-hour throttle
+            await Promise.all(membersToNotify.map(async (member) => {
+                // Check Redis for 2-minute throttle (reduced from 2 hours)
                 const throttleKey = `push_limit:thread:${communityId}:${member.userId}`;
                 const isThrottled = await redis.get(throttleKey);
 
@@ -124,12 +124,14 @@ export class ThreadService {
                         body,
                         { type: "NEW_THREAD", threadId: thread.id, communityId },
                         notificationImageUrl
-                    );
+                    ).catch(err => {
+                        // console.error("Push failed for community member", member.userId, err);
+                    });
 
-                    // Set throttle in Redis for 2 hours (7200 seconds)
-                    await redis.set(throttleKey, "1", "EX", 7200);
+                    // Set throttle in Redis for 2 minutes (120 seconds)
+                    await redis.set(throttleKey, "1", "EX", 120);
                 }
-            }
+            }));
         } catch (err) {
             console.error("Failed to send community notifications:", err);
         }
