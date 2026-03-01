@@ -82,7 +82,7 @@ export const markGroupMessageViewed = async (req: Request, res: Response) => {
     try {
         const userId = req.user!.userId;
         const { messageId } = req.params;
-        await GroupService.markGroupMessageViewed(messageId, userId);
+        await GroupService.markGroupMessageViewed(messageId as string, userId);
         return res.status(200).json({ success: true, message: "Marked viewed" });
     } catch (error: any) {
         if (error.message === "NOT_A_MEMBER") {
