@@ -1,0 +1,37 @@
+[dotenv@17.2.3] injecting env (5) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+Starting Voting Verification...
+User created: d2d851ec-e3b0-451d-8e62-b2c1249cb097
+PrismaClientKnownRequestError: 
+Invalid `prisma.community.create()` invocation in
+C:\Users\Welcome\Desktop\Adda_Backend\src\scripts\verify_voting.ts:20:46
+
+  17 console.log("User created:", user.id);
+  18 
+  19 // 2. Create Community (needed for Thread)
+→ 20 const community = await prisma.community.create(
+Null constraint violation on the (not available)
+    at qr.handleRequestError (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at qr.handleAndLogRequestError (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at qr.request (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:805:24)
+    at async main (C:\Users\Welcome\Desktop\Adda_Backend\src\scripts\verify_voting.ts:20:23) {
+  code: 'P2011',
+  meta: {
+    modelName: 'Community',
+    driverAdapterError: DriverAdapterError: NullConstraintViolation
+        at PrismaPgAdapter.onError (file:///C:/Users/Welcome/Desktop/Adda_Backend/node_modules/@prisma/adapter-pg/dist/index.mjs:651:11)
+        at PrismaPgAdapter.performIO (file:///C:/Users/Welcome/Desktop/Adda_Backend/node_modules/@prisma/adapter-pg/dist/index.mjs:646:12)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async PrismaPgAdapter.queryRaw (file:///C:/Users/Welcome/Desktop/Adda_Backend/node_modules/@prisma/adapter-pg/dist/index.mjs:566:30)
+        at async <anonymous> (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client-engine-runtime\src\tracing.ts:68:22)
+        at async fr (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client-engine-runtime\src\tracing.ts:56:10)
+        at async e.interpretNode (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:190:26)
+        at async e.interpretNode (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:217:41)
+        at async e.interpretNode (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:276:41)
+        at async e.run (C:\Users\Welcome\Desktop\Adda_Backend\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:96:23) {
+      cause: [Object]
+    }
+  },
+  clientVersion: '7.2.0'
+}

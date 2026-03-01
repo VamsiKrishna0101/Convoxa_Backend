@@ -1,0 +1,56 @@
+﻿node.exe : Loaded 
+Prisma config from 
+prisma.config.ts.
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Loaded    
+ Prisma c...isma.    
+config.ts.:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+
+Prisma schema loaded 
+from 
+prisma\schema.prisma.
+Error: Prisma schema 
+validation - 
+(get-dmmf wasm)
+Error code: P1012
+[1;91merror[0m: 
+[1mField 
+"avatarConfig" is 
+already defined on 
+model "User".[0m
+  [1;94m-->[0m  [4
+mprisma\schema.prisma
+:117[0m
+[1;94m   | [0m
+[1;94m116 | [0m  
+[1;94m117 | [0m  [
+1;91mavatarConfig[0m
+           Json?     
+     // DiceBear 
+avatar customization 
+config
+[1;94m   | [0m
+
+Validation Error 
+Count: 1
+[Context: getDmmf]
+
+Prisma CLI Version : 
+7.2.0

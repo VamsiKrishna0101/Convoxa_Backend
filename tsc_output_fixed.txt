@@ -1,0 +1,47 @@
+﻿src/modules/admin/admin.controller.ts(21,73): error TS2554: Expected 2 arguments, but got 3.
+src/modules/chat/chat.controller.ts(88,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/chat/chat.controller.ts(132,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/chat/chat.controller.ts(147,38): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/chat/chat.controller.ts(159,37): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/chat/chat.controller.ts(171,39): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/comments/comment.controller.ts(78,63): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/communities/community.controller.ts(138,64): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/communities/community.controller.ts(182,75): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/communities/community.controller.ts(209,67): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/communities/community.controller.ts(229,65): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/communities/community.services.ts(362,17): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/modules/communities/community.services.ts(377,13): error TS2322: Type 'string' is not assignable to type '"POST" | "COMMENT" | "BOTH"'.
+src/modules/communities/community.services.ts(450,13): error TS2322: Type 'string' is not assignable to type '"POST" | "COMMENT" | "BOTH"'.
+src/modules/communities/community.services.ts(500,9): error TS2322: Type '{ id: string; title: string; description: string; order: number; communityId: string; keywords: string[]; appliesTo: string; isActive: boolean; createdAt: string; updatedAt: string; }[]' is not assignable to type 'Readonly<{ id: string; title: string; description?: string | undefined; order: number; communityId: string; keywords: string[]; appliesTo: "POST" | "COMMENT" | "BOTH"; isActive: boolean; createdAt: string; updatedAt: string; }>[]'.
+  Type '{ id: string; title: string; description: string; order: number; communityId: string; keywords: string[]; appliesTo: string; isActive: boolean; createdAt: string; updatedAt: string; }' is not assignable to type 'Readonly<{ id: string; title: string; description?: string | undefined; order: number; communityId: string; keywords: string[]; appliesTo: "POST" | "COMMENT" | "BOTH"; isActive: boolean; createdAt: string; updatedAt: string; }>'.
+    Types of property 'appliesTo' are incompatible.
+      Type 'string' is not assignable to type '"POST" | "COMMENT" | "BOTH"'.
+src/modules/groups/group.controller.ts(73,54): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/profile/profile.controller.ts(21,56): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/profile/profile.controller.ts(96,68): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/profile/profile.controller.ts(112,70): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/replies/reply.controller.ts(38,61): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/report/report.controller.ts(53,64): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/report/report.controller.ts(71,57): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/scripts/verify_soft_delete.ts(22,13): error TS2322: Type '{ name: string; description: string; topic: "TECHNOLOGY"; ownerId: string; }' is not assignable to type '(Without<CommunityCreateInput, CommunityUncheckedCreateInput> & CommunityUncheckedCreateInput) | (Without<...> & CommunityCreateInput)'.
+  Type '{ name: string; description: string; topic: "TECHNOLOGY"; ownerId: string; }' is not assignable to type 'Without<CommunityCreateInput, CommunityUncheckedCreateInput> & CommunityUncheckedCreateInput'.
+    Property 'imageUrl' is missing in type '{ name: string; description: string; topic: "TECHNOLOGY"; ownerId: string; }' but required in type 'CommunityUncheckedCreateInput'.
+src/sockets/chat.socket.ts(29,52): error TS2551: Property 'sendmessage' does not exist on type 'typeof ChatService'. Did you mean 'sendMessage'?
