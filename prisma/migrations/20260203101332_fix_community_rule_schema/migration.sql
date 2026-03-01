@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "CommunityRule" ADD COLUMN     "appliesTo" TEXT NOT NULL DEFAULT 'POST',
+ADD COLUMN     "isActive" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "keywords" TEXT[],
+ADD COLUMN     "order" INTEGER NOT NULL DEFAULT 0;
