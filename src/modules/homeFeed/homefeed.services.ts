@@ -5,14 +5,18 @@ import { CursorHelper } from "../common/cursor.helper.js";
 export class HomeFeedService {
     static async getHomeFeed(userId: string, cursorStr?: string, limit: number = 20, sortBy: 'HOT' | 'NEW' | 'TOP' | 'smart' = 'NEW') {
         // Decode Query Cursor
-        let cursorId: string | undefined = undefined;
+        let pCursorId: string | undefined = undefined;
+        let dCursorId: string | undefined = undefined;
+
         if (cursorStr) {
             const decoded = CursorHelper.decode(cursorStr);
-            if (typeof decoded === 'string') {
-                cursorId = decoded;
-            } else {
-                // Ignore old Object cursor formats if they somehow exist in client storage
-                cursorId = undefined;
+            if (typeof decoded === 'string' && decoded.includes('|')) {
+                const [p, d] = decoded.split('|');
+                pCursorId = p === 'null' ? undefined : p;
+                dCursorId = d === 'null' ? undefined : d;
+            } else if (typeof decoded === 'string') {
+                // Fallback for old single cursor
+                pCursorId = decoded;
             }
         }
 
@@ -39,28 +43,24 @@ export class HomeFeedService {
         } else if (sortBy === 'TOP') {
             orderBy = [{ upvotes: 'desc' }, { id: 'desc' }];
         } else {
+            // NEW
             orderBy = [{ createdAt: 'desc' }, { id: 'desc' }];
         }
 
-        // 3. Construct Unified OR Conditions
-        const OR_conditions: any[] = [];
+        // 3. Construct Personalized OR Conditions
+        const personalizedConditions: any[] = [];
 
-        // J: Joined Communities
         if (joinedCommunityIds.length > 0) {
-            OR_conditions.push({ communityId: { in: joinedCommunityIds } });
+            personalizedConditions.push({ communityId: { in: joinedCommunityIds } });
         }
-
-        // F: Following Users
         if (followingIds.length > 0) {
-            OR_conditions.push({
+            personalizedConditions.push({
                 authorId: { in: followingIds },
                 community: { visibility: 'PUBLIC' }
             });
         }
-
-        // S: Similar Topics
         if (joinedTopics.length > 0) {
-            OR_conditions.push({
+            personalizedConditions.push({
                 community: {
                     topic: { in: joinedTopics },
                     id: { notIn: joinedCommunityIds },
@@ -69,69 +69,104 @@ export class HomeFeedService {
             });
         }
 
-        // If user is completely brand new (no joined, no following, no topics) -> Fallback to all Public
-        if (OR_conditions.length === 0) {
-            OR_conditions.push({ community: { visibility: 'PUBLIC' } });
-        }
-
-        // 4. Fetch the single consolidated stream
-        const query: any = {
-            where: { isDeleted: false, OR: OR_conditions },
-            take: limit + 1, // Fetch extra for lookahead (to check if there's a next page)
-            orderBy: orderBy,
-            select: {
-                id: true,
-                title: true,
-                content: true,
-                imageUrl: true,
-                upvotes: true,
-                downvotes: true,
-                createdAt: true,
-                hotScore: true,
-                isAnonymous: true,
-                authorId: true,
-                communityId: true,
-                community: {
-                    select: {
-                        id: true,
-                        name: true,
-                        imageUrl: true,
-                        topic: true,
-                        allowAnonymous: true
-                    }
-                },
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        role: true,
-                        avatarConfig: true
-                    }
-                },
-                votes: { where: { userId }, select: { type: true } },
-                _count: { select: { comments: true } }
-            }
+        // 4. Feeds Data Structure Setup
+        const selectFields = {
+            id: true, title: true, content: true, imageUrl: true,
+            upvotes: true, downvotes: true, createdAt: true,
+            hotScore: true, isAnonymous: true, authorId: true, communityId: true,
+            community: { select: { id: true, name: true, imageUrl: true, topic: true, allowAnonymous: true } },
+            author: { select: { id: true, username: true, role: true, avatarConfig: true } },
+            votes: { where: { userId }, select: { type: true } },
+            _count: { select: { comments: true } }
         };
 
-        if (cursorId) {
-            query.cursor = { id: cursorId };
-            query.skip = 1;
+        const personalizedLimit = Math.ceil(limit * 0.7);
+        const discoveryLimit = limit - personalizedLimit;
+
+        // 5. Fetch Personalized Feed
+        let personalizedRaw: any[] = [];
+        if (personalizedConditions.length > 0) {
+            const pQuery: any = {
+                where: { isDeleted: false, OR: personalizedConditions },
+                take: personalizedLimit + 1,
+                orderBy: orderBy,
+                select: selectFields
+            };
+            if (pCursorId) {
+                pQuery.cursor = { id: pCursorId };
+                pQuery.skip = 1;
+            }
+            personalizedRaw = await prisma.thread.findMany(pQuery);
         }
 
-        const rawFeed = await prisma.thread.findMany(query);
+        // 6. Fetch Discovery Feed (Public communities not explicitly followed/joined)
+        const discoveryConditions = [
+            { community: { visibility: 'PUBLIC' } }
+        ];
 
-        // 5. Deduplication & Composition processing
-        let nextCursor: string | null = null;
-        const feedToReturn = rawFeed;
-
-        // If we got limit + 1, then we have a next cursor. Pop the last item off to keep returned array strictly at length `limit`
-        if (feedToReturn.length > limit) {
-            const nextItem = feedToReturn.pop();
-            nextCursor = nextItem ? nextItem.id : null;
+        // If we want pure discovery, we can exclude personalized stuff, but it's okay if there's minor overlap.
+        // For strictness, exclude joined communities.
+        const discoveryQuery: any = {
+            where: { isDeleted: false, communityId: { notIn: joinedCommunityIds }, community: { visibility: 'PUBLIC' } },
+            take: discoveryLimit + 1,
+            orderBy: orderBy,
+            select: selectFields
+        };
+        if (dCursorId) {
+            discoveryQuery.cursor = { id: dCursorId };
+            discoveryQuery.skip = 1;
         }
+        const discoveryRaw = await prisma.thread.findMany(discoveryQuery);
+
+        // 7. Calculate Cursors & Slice
+        let nextPCursor: string | null = null;
+        if (personalizedRaw.length > personalizedLimit) {
+            const nextItem = personalizedRaw.pop();
+            nextPCursor = nextItem ? nextItem.id : null;
+        } else if (personalizedRaw.length > 0) {
+            nextPCursor = personalizedRaw[personalizedRaw.length - 1].id;
+        }
+
+        let nextDCursor: string | null = null;
+        if (discoveryRaw.length > discoveryLimit) {
+            const nextItem = discoveryRaw.pop();
+            nextDCursor = nextItem ? nextItem.id : null;
+        } else if (discoveryRaw.length > 0) {
+            nextDCursor = discoveryRaw[discoveryRaw.length - 1].id;
+        }
+
+        let hasMore = (personalizedRaw.length === personalizedLimit && nextPCursor !== null) ||
+            (discoveryRaw.length === discoveryLimit && nextDCursor !== null);
+
+        // Filter duplicates if any
+        const pIds = new Set(personalizedRaw.map(t => t.id));
+        const cleanDiscoveryRaw = discoveryRaw.filter(t => !pIds.has(t.id));
+
+        // 8. Blend and Sort In-Memory
+        const blendedFeed = [...personalizedRaw, ...cleanDiscoveryRaw];
+
+        blendedFeed.sort((a, b) => {
+            if (sortBy === 'HOT' || sortBy === 'smart') {
+                if (b.hotScore !== a.hotScore) return b.hotScore - a.hotScore;
+                return b.id.localeCompare(a.id);
+            } else if (sortBy === 'TOP') {
+                if (b.upvotes !== a.upvotes) return b.upvotes - a.upvotes;
+                return b.id.localeCompare(a.id);
+            } else {
+                // NEW
+                const timeDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                if (timeDiff !== 0) return timeDiff;
+                return b.id.localeCompare(a.id);
+            }
+        });
+
+        // Ensure we don't accidentally return more than 'limit' items if deduplication failed
+        const finalFeed = blendedFeed.slice(0, limit);
+
+        const nextCursorStr = hasMore ? `${nextPCursor || 'null'}|${nextDCursor || 'null'}` : null;
 
         return {
-            data: feedToReturn.map((t: any) => ({
+            data: finalFeed.map((t: any) => ({
                 id: t.id,
                 title: t.title,
                 content: t.content,
@@ -152,7 +187,7 @@ export class HomeFeedService {
                 avatarConfig: (t.isAnonymous) ? null : t.author.avatarConfig,
                 isAnonymous: t.isAnonymous ?? false
             })),
-            nextCursor: nextCursor ? CursorHelper.encode(nextCursor) : null
+            nextCursor: nextCursorStr ? CursorHelper.encode(nextCursorStr) : null
         };
     }
 }

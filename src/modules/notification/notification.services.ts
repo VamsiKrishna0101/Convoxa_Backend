@@ -48,8 +48,10 @@ export class NotificationService {
 
             const pushToken = (user as any)?.expopushtoken;
             if (!pushToken) {
+                console.log("Push Notification skipped: No token found for user", userId);
                 return;
             }
+            console.log("Attempting to send push to token:", pushToken);
 
             // CASE 1: EXPO PUSH TOKEN
             if (Expo.isExpoPushToken(pushToken)) {
@@ -67,9 +69,9 @@ export class NotificationService {
 
                 try {
                     const ticketChunk = await expo.sendPushNotificationsAsync(messages);
-                    // console.log("Expo Push Ticket:", ticketChunk);
+                    console.log("Expo Push Ticket:", ticketChunk);
                 } catch (error) {
-                    // console.error("Error sending Expo Push:", error);
+                    console.error("Error sending Expo Push:", error);
                 }
                 return;
             }
@@ -115,11 +117,15 @@ export class NotificationService {
             };
 
             const app = getFirebaseApp();
-            if (!app) return;
+            if (!app) {
+                console.error("Firebase app not initialized. Cannot send raw push.");
+                return;
+            }
 
-            await app.messaging().send(message);
+            const response = await app.messaging().send(message);
+            console.log("Firebase push sent successfully. Response:", response);
         } catch (error) {
-            // console.error("Failed to send push notification:", error);
+            console.error("Failed to send push notification:", error);
         }
     }
 
