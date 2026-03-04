@@ -8,8 +8,8 @@ import { BotJobType, CommentOnThreadPayload } from "./bot.types.js";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-const fallbackModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const fallbackModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
 export class BotService {
     private static BOT_EMAIL = "bot@convoxa.com";
