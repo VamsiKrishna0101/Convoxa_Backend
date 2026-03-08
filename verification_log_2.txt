@@ -1,7 +1,0 @@
-[dotenv@17.2.3] injecting env (5) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
-Starting Voting Verification...
-User created: 794c1178-cd66-4d59-9650-f275a65a8c23
-Error: NOT_A_MEMBER
-    at Function.createComment (C:\Users\Welcome\Desktop\Adda_Backend\src\modules\comments\comments.services.ts:32:32)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async main (C:\Users\Welcome\Desktop\Adda_Backend\src\scripts\verify_voting.ts:51:21)

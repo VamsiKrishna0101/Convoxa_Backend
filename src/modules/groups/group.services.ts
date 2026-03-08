@@ -143,6 +143,7 @@ export class GroupService {
             type: msg.type,
             mediaUrl: msg.mediaUrl,
             isViewOnce: msg.isViewOnce,
+            viewedBy: [] as { id: string }[], // new messages have no viewers yet
             createdAt: msg.createdAt.toISOString(),
             sender: msg.sender
         }

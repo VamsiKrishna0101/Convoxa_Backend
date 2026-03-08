@@ -116,7 +116,10 @@ export const deleteThread = async (req: Request, res: Response) => {
 export const getAllThreads = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.userId;  // Optional
-        const result = await ThreadService.getAllThreads(userId);
+        const cursor = req.query.cursor as string | undefined;
+        const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+        const result = await ThreadService.getAllThreads(userId, cursor, limit);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
         // console.log(error);

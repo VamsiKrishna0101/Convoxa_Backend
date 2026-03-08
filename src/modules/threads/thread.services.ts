@@ -161,7 +161,7 @@ export class ThreadService {
             upvotes: 0,
             downvotes: 0,
             netVotes: 0,
-            userVote: null,
+            hasVoted: null,
             commentsCount: 0,  // New thread has no comments
             username: thread.username,
             communityName: thread.communityName,
@@ -210,7 +210,7 @@ export class ThreadService {
             upvotes: voteData.upvotes,
             downvotes: voteData.downvotes,
             netVotes: voteData.netVotes,
-            userVote: voteData.userVote,
+            hasVoted: voteData.userVote,
             commentsCount: thread._count ? thread._count.comments : (thread.commentsCount || 0),
             username: thread.username,
             communityName: thread.communityName,
@@ -282,7 +282,7 @@ export class ThreadService {
                     upvotes: voteData.upvotes,
                     downvotes: voteData.downvotes,
                     netVotes: voteData.netVotes,
-                    userVote: voteData.userVote,
+                    hasVoted: voteData.userVote,
                     commentsCount: thread._count.comments,
                     username: thread.username,
                     communityName: thread.communityName,
@@ -345,7 +345,7 @@ export class ThreadService {
                     upvotes: voteData.upvotes,
                     downvotes: voteData.downvotes,
                     netVotes: voteData.netVotes,
-                    userVote: voteData.userVote,
+                    hasVoted: voteData.userVote,
                     commentsCount: thread._count.comments,
                     username: thread.username,
                     communityName: thread.communityName,
@@ -413,7 +413,7 @@ export class ThreadService {
             upvotes: voteData.upvotes,
             downvotes: voteData.downvotes,
             netVotes: voteData.netVotes,
-            userVote: voteData.userVote,
+            hasVoted: voteData.userVote,
             commentsCount: updated._count.comments,
             username: updated.username,
             communityName: updated.communityName,
@@ -471,7 +471,7 @@ export class ThreadService {
             upvotes: voteData.upvotes,
             downvotes: voteData.downvotes,
             netVotes: voteData.netVotes,
-            userVote: voteData.userVote,
+            hasVoted: voteData.userVote,
             commentsCount: updated._count.comments,
             username: updated.username,
             communityName: updated.communityName,
@@ -486,8 +486,15 @@ export class ThreadService {
         };
     }
 
-    static async getAllThreads(userId?: string): Promise<ThreadOutput[]> {
+    static async getAllThreads(
+        userId?: string,
+        cursor?: string,
+        limit: number = 20
+    ): Promise<{ data: ThreadOutput[], nextCursor: string | null }> {
         const threads = await prisma.thread.findMany({
+            take: limit + 1,
+            skip: cursor ? 1 : 0,
+            cursor: cursor ? { id: cursor } : undefined,
             include: {
                 author: { select: { id: true, username: true, avatarConfig: true } },
                 community: true,
@@ -495,6 +502,12 @@ export class ThreadService {
             },
             orderBy: { createdAt: "desc" }
         });
+
+        let nextCursor: string | null = null;
+        if (threads.length > limit) {
+            const nextItem = threads.pop();
+            nextCursor = nextItem!.id;
+        }
 
         const threadsWithVotes = await Promise.all(
             threads.map(async (thread) => {
@@ -507,7 +520,7 @@ export class ThreadService {
                     upvotes: voteData.upvotes,
                     downvotes: voteData.downvotes,
                     netVotes: voteData.netVotes,
-                    userVote: voteData.userVote,
+                    hasVoted: voteData.userVote,
                     commentsCount: thread._count.comments,
                     username: thread.username,
                     communityName: thread.communityName,
@@ -515,6 +528,7 @@ export class ThreadService {
                     communityImageUrl: thread.community.imageUrl,
                     authorId: thread.isAnonymous ? "" : thread.authorId,
                     isAnonymous: thread.isAnonymous ?? false,
+                    allowAnonymous: thread.community.allowAnonymous,
                     avatarConfig: thread.isAnonymous ? null : thread.author.avatarConfig,
                     createdAt: thread.createdAt.toISOString(),
                     updatedAt: thread.updatedAt.toISOString()
@@ -522,7 +536,10 @@ export class ThreadService {
             })
         );
 
-        return threadsWithVotes;
+        return {
+            data: threadsWithVotes,
+            nextCursor
+        };
     }
 
     // VOTE ON THREAD

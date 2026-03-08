@@ -15,7 +15,7 @@ export type ThreadOutput = Readonly<{
     upvotes: number;
     downvotes: number;
     netVotes: number;
-    userVote: "UP" | "DOWN" | null;  // Current user's vote
+    hasVoted: "UP" | "DOWN" | null;  // Current user's vote
     commentsCount: number;  // Total number of comments
     username: string;
     communityName: string;

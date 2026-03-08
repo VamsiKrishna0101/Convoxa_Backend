@@ -170,12 +170,13 @@ export class NotificationService {
             include: {
                 sender: { select: { id: true, username: true } },
                 thread: {
-                    select: { id: true, title: true, imageUrl: true, community: { select: { imageUrl: true } } }
+                    select: { id: true, title: true, imageUrl: true, isAnonymous: true, community: { select: { imageUrl: true } } }
                 },
                 comment: {
                     select: {
                         id: true,
                         content: true,
+                        isAnonymous: true,
                         thread: { select: { id: true, title: true, imageUrl: true, community: { select: { imageUrl: true } } } }
                     }
                 },
@@ -183,6 +184,7 @@ export class NotificationService {
                     select: {
                         id: true,
                         content: true,
+                        isAnonymous: true,
                         comment: {
                             select: {
                                 thread: { select: { id: true, title: true, imageUrl: true, community: { select: { imageUrl: true } } } }
@@ -222,16 +224,25 @@ export class NotificationService {
                 communityImageUrl = n.reply.comment.thread.community?.imageUrl;
             }
 
+            // Determine if the acting user posted anonymously
+            // Priority: reply.isAnonymous > comment.isAnonymous > thread.isAnonymous
+            const isAnonymous = !!(n.reply?.isAnonymous || n.comment?.isAnonymous || n.thread?.isAnonymous);
+
+            // Mask sender if the action was done anonymously
+            const senderData = n.sender
+                ? (isAnonymous
+                    ? { id: "", username: "Anonymous" }
+                    : { id: n.sender.id, username: n.sender.username })
+                : null;
+
             return {
                 id: n.id,
                 content: n.content,
                 type: n.type,
                 status: n.status,
                 createdAt: n.createdAt,
-                sender: n.sender ? {
-                    id: n.sender.id,
-                    username: n.sender.username
-                } : null,
+                isAnonymous,
+                sender: senderData,
                 threadId: threadId || null,
                 threadName: threadName || null,
                 threadImageUrl: threadImageUrl || null,
