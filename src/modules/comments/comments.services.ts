@@ -322,7 +322,11 @@ export class CommentService {
         const comment = await prisma.comment.findUnique({
             where: { id: commentId },
             include: {
-                thread: true
+                thread: {
+                    include: {
+                        community: true
+                    }
+                }
             }
         });
 
@@ -348,22 +352,7 @@ export class CommentService {
             });
         };
 
-        // Author can delete
-        if (comment.authorId === userId) {
-            await prisma.comment.update({
-                where: { id: commentId },
-                data: {
-                    content: "[deleted]",
-                    username: "deleted",
-                    isDeleted: true,
-                    deletedAt: new Date()
-                }
-            });
-            await syncThreadScore(comment.threadId);
-            return { success: true };
-        }
-
-        // MOD / ADMIN can delete
+        // Authorization check: Author, Community Owner, ADMIN, or MODERATOR
         const membership = await prisma.communityMember.findUnique({
             where: {
                 userId_communityId: {
@@ -373,10 +362,12 @@ export class CommentService {
             }
         });
 
-        if (
-            !membership ||
-            (membership.role !== "ADMIN" && membership.role !== "MODERATOR")
-        ) {
+        const isAuthor = comment.authorId === userId;
+        const isCommOwner = comment.thread.community.ownerId === userId;
+        const isAdmin = membership?.role === "ADMIN";
+        const isModerator = membership?.role === "MODERATOR";
+
+        if (!isAuthor && !isCommOwner && !isAdmin && !isModerator) {
             throw new Error("NOT_AUTHORIZED");
         }
 
@@ -385,10 +376,12 @@ export class CommentService {
             data: {
                 content: "[deleted]",
                 username: "deleted",
+                imageUrl: null,
                 isDeleted: true,
                 deletedAt: new Date()
             }
         });
+
         await syncThreadScore(comment.threadId);
         return { success: true };
     }

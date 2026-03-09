@@ -9,6 +9,7 @@ import {
     removeVote,
     getUserReplyVotes
 } from "./reply.controller.js";
+import { optionalAuth } from "../../middlewares/optionalAuth.middleware.js";
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ const router = express.Router();
 router.post("/", requireAuth, createReply);
 
 // Get all replies for comment (ordered by path)
-router.get("/comment/:commentId", getCommentReplies);
+router.get("/comment/:commentId", optionalAuth, getCommentReplies);
 
 // Edit reply
 router.put("/", requireAuth, editReply);

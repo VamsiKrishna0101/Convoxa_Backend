@@ -9,6 +9,7 @@ import {
     removeVote,
     getUserCommentVotes
 } from "./comment.controller.js";
+import { optionalAuth } from "../../middlewares/optionalAuth.middleware.js";
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.post("/", requireAuth, createComment);
 router.get("/votes/user/:userId", requireAuth, getUserCommentVotes);
 
 // Get all comments for thread (ordered by path)
-router.get("/thread/:threadId", getThreadComments);
+router.get("/thread/:threadId", optionalAuth, getThreadComments);
 
 // Edit comment
 router.put("/", requireAuth, editComment);

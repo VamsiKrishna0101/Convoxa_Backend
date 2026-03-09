@@ -12,23 +12,24 @@ import {
     removeVote,
     getAllVotesOfUser
 } from "./thread.controller.js";
+import { optionalAuth } from "../../middlewares/optionalAuth.middleware.js";
 
 const router = express.Router();
 
 // Get all threads
-router.get("/all", getAllThreads);
+router.get("/all", optionalAuth, getAllThreads);
 
 // Create a thread
 router.post("/", requireAuth, createThread);
 
 // Get a specific thread
-router.get("/:threadId", getThreadById);
+router.get("/:threadId", optionalAuth, getThreadById);
 
 // Get all threads of a community
-router.get("/community/:communityId", getAllThreadsOfCommunity);
+router.get("/community/:communityId", optionalAuth, getAllThreadsOfCommunity);
 
 // Get all threads of a user
-router.get("/user/:userId", getAllThreadsOfUser);
+router.get("/user/:userId", optionalAuth, getAllThreadsOfUser);
 
 // Update a thread
 router.patch("/:threadId", requireAuth, updateThread);

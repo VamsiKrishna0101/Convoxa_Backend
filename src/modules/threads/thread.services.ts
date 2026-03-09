@@ -239,7 +239,7 @@ export class ThreadService {
 
         if (!community) throw new Error("COMMUNITY_NOT_FOUND");
 
-        const whereClause: any = { communityId };
+        const whereClause: any = { communityId, isDeleted: false };
         if (search) {
             whereClause.OR = [
                 { title: { contains: search, mode: 'insensitive' } },
@@ -316,7 +316,7 @@ export class ThreadService {
         if (!user) throw new Error("USER_NOT_FOUND");
 
         const threads = await prisma.thread.findMany({
-            where: { authorId: userId },
+            where: { authorId: userId, isDeleted: false },
             take: limit + 1,
             skip: cursor ? 1 : 0,
             cursor: cursor ? { id: cursor } : undefined,
@@ -438,7 +438,25 @@ export class ThreadService {
         });
 
         if (!thread) throw new Error("THREAD_NOT_FOUND");
-        if (thread.authorId !== userId) throw new Error("NOT_AUTHORIZED");
+
+        // Authorization check: Author, Community Owner, ADMIN, or MODERATOR
+        const membership = await prisma.communityMember.findUnique({
+            where: {
+                userId_communityId: {
+                    userId,
+                    communityId: thread.communityId
+                }
+            }
+        });
+
+        const isAuthor = thread.authorId === userId;
+        const isOwner = thread.community.ownerId === userId;
+        const isAdmin = membership?.role === "ADMIN";
+        const isModerator = membership?.role === "MODERATOR";
+
+        if (!isAuthor && !isOwner && !isAdmin && !isModerator) {
+            throw new Error("NOT_AUTHORIZED");
+        }
 
         const updated = await prisma.thread.update({
             where: {
@@ -448,6 +466,7 @@ export class ThreadService {
                 content: "[deleted]",
                 title: "[deleted]",
                 username: "deleted",
+                imageUrl: null,
                 isDeleted: true,
                 deletedAt: new Date()
             },
@@ -492,6 +511,7 @@ export class ThreadService {
         limit: number = 20
     ): Promise<{ data: ThreadOutput[], nextCursor: string | null }> {
         const threads = await prisma.thread.findMany({
+            where: { isDeleted: false },
             take: limit + 1,
             skip: cursor ? 1 : 0,
             cursor: cursor ? { id: cursor } : undefined,

@@ -285,7 +285,11 @@ export class ReplyService {
             include: {
                 comment: {
                     include: {
-                        thread: true
+                        thread: {
+                            include: {
+                                community: true
+                            }
+                        }
                     }
                 }
             }
@@ -293,21 +297,7 @@ export class ReplyService {
 
         if (!reply) throw new Error("REPLY_NOT_FOUND");
 
-        // Author can delete
-        if (reply.authorId === userId) {
-            await prisma.reply.update({
-                where: { id: replyId },
-                data: {
-                    content: "[deleted]",
-                    username: null,
-                    isDeleted: true,
-                    deletedAt: new Date()
-                }
-            });
-            return { success: true };
-        }
-
-        // MOD / ADMIN can delete
+        // Authorization check: Author, Community Owner, ADMIN, or MODERATOR
         const membership = await prisma.communityMember.findUnique({
             where: {
                 userId_communityId: {
@@ -317,10 +307,12 @@ export class ReplyService {
             }
         });
 
-        if (
-            !membership ||
-            (membership.role !== "ADMIN" && membership.role !== "MODERATOR")
-        ) {
+        const isAuthor = reply.authorId === userId;
+        const isCommOwner = reply.comment.thread.community.ownerId === userId;
+        const isAdmin = membership?.role === "ADMIN";
+        const isModerator = membership?.role === "MODERATOR";
+
+        if (!isAuthor && !isCommOwner && !isAdmin && !isModerator) {
             throw new Error("NOT_AUTHORIZED");
         }
 
@@ -328,7 +320,8 @@ export class ReplyService {
             where: { id: replyId },
             data: {
                 content: "[deleted]",
-                username: null,
+                username: "deleted",
+                imageUrl: null,
                 isDeleted: true,
                 deletedAt: new Date()
             }
