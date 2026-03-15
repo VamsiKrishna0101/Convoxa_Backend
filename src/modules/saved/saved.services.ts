@@ -113,7 +113,24 @@ export class SavedService {
                 comment: {
                     include: {
                         author: { select: { id: true, username: true } },
-                        thread: { select: { id: true, title: true, communityId: true } }
+                        thread: {
+                            select: {
+                                id: true,
+                                title: true,
+                                upvotes: true,
+                                downvotes: true,
+                                commentsCount: true,
+                                communityName: true,
+                                communityId: true,
+                                authorId: true,
+                                isAnonymous: true,
+                                author: {
+                                    select: {
+                                        username: true,
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 reply: {

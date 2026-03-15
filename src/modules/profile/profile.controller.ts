@@ -35,24 +35,24 @@ export const getuserprofile = async (req: Request, res: Response) => {
 export const getUserPosts = async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
-        const sort = req.query.sort === 'asc' ? 'asc' : 'desc';
-        const result = await ProfileService.getPosts(userId as string, sort);
+        const sort = (req.query.sort as string) === 'asc' ? 'asc' : 'desc';
+        const viewerId = (req as any).user?.userId as string | undefined;
+        const result = await ProfileService.getPosts(userId as string, viewerId, sort);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
-        // console.log(error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
 export const getUserReplies = async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
-        const sort = req.query.sort === 'asc' ? 'asc' : 'desc';
-        const result = await ProfileService.getReplies(userId as string, sort);
+        const sort = (req.query.sort as string) === 'asc' ? 'asc' : 'desc';
+        const viewerId = (req as any).user?.userId as string | undefined;
+        const result = await ProfileService.getReplies(userId as string, viewerId, sort);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
-        // console.log(error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -94,7 +94,11 @@ export const getUserUpvotes = async (req: Request, res: Response) => {
         const { userId } = req.params;
         const sort = req.query.sort === 'asc' ? 'asc' : 'desc';
         const result = await ProfileService.getUpvotedThreads(userId as string, sort);
-        return res.status(200).json({ success: true, result });
+        const threads = result.map((t: any) => ({
+            ...t,
+            netVotes: t.netVotes ?? (t.upvotes - t.downvotes)
+        }));
+        return res.status(200).json({ success: true, result: threads });
     } catch (error: any) {
         // console.log(error);
         return res.status(500).json({ success: false, message: "Internal server error" });
@@ -106,8 +110,8 @@ export const getUserUpvotes = async (req: Request, res: Response) => {
 export const getMyPosts = async (req: Request, res: Response) => {
     try {
         const userId = req.user!.userId;
-        const sort = req.query.sort === 'asc' ? 'asc' : 'desc';
-        const result = await ProfileService.getPosts(userId, sort);
+        const sort = (req.query.sort as string) === 'asc' ? 'asc' : 'desc';
+        const result = await ProfileService.getPosts(userId, userId, sort);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
         // console.log(error);
@@ -118,8 +122,8 @@ export const getMyPosts = async (req: Request, res: Response) => {
 export const getMyReplies = async (req: Request, res: Response) => {
     try {
         const userId = req.user!.userId;
-        const sort = req.query.sort === 'asc' ? 'asc' : 'desc';
-        const result = await ProfileService.getReplies(userId, sort);
+        const sort = (req.query.sort as string) === 'asc' ? 'asc' : 'desc';
+        const result = await ProfileService.getReplies(userId, userId, sort);
         return res.status(200).json({ success: true, result });
     } catch (error: any) {
         // console.log(error);
@@ -219,8 +223,11 @@ export const getUpvotedThreads = async (req: Request, res: Response) => {
         const sort = req.query.sort === 'asc' ? 'asc' : 'desc';
         // console.log(`[Backend] Fetching upvoted threads for user: ${userId}`);
         const result = await ProfileService.getUpvotedThreads(userId, sort);
-        // console.log(`[Backend] Found ${result.length} upvoted threads`);
-        return res.status(200).json({ success: true, result });
+        const threads = result.map((t: any) => ({
+            ...t,
+            netVotes: t.netVotes ?? (t.upvotes - t.downvotes)
+        }));
+        return res.status(200).json({ success: true, result: threads });
     } catch (error: any) {
         // console.error("[Backend] Error fetching upvoted threads:", error);
         return res.status(500).json({ success: false, message: "Internal server error" });

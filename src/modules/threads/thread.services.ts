@@ -35,6 +35,19 @@ export class ThreadService {
         return { upvotes, downvotes, netVotes, userVote };
     }
 
+    private static async getThreadSaveStatus(threadId: string, userId?: string): Promise<boolean> {
+        if (!userId) return false;
+        const saved = await prisma.savedThread.findUnique({
+            where: {
+                userId_threadId: {
+                    userId,
+                    threadId
+                }
+            }
+        });
+        return !!saved;
+    }
+
     static async createThread(
         input: ThreadInput,
         userId: string
@@ -118,17 +131,14 @@ export class ThreadService {
 
                 if (!isThrottled) {
                     // Send Push Directly (No DB Record)
-                    const notificationImageUrl = thread.imageUrl || community.imageUrl || undefined; // Thread image takes precedence for Big Picture
+                    const notificationImageUrl = thread.imageUrl || undefined; // Thread image takes precedence, NO fallback to community image per USER_REQUEST
 
-                    let body = `r/${community.name} • u/${user.username}`;
-                    if (!thread.imageUrl) {
-                        const truncatedContent = thread.content.length > 50 ? thread.content.substring(0, 50) + "..." : thread.content;
-                        body = `u/${user.username} posted a thread: ${truncatedContent}`;
-                    }
+                    const title = `c/${community.name}`;
+                    const body = `${isAnonymous ? "Anonymous user" : user.username} posted: ${thread.title}`;
 
                     await NotificationService.sendPushNotification(
                         member.userId,
-                        thread.title, // Title: The Thread Headline
+                        title,
                         body,
                         { type: "NEW_THREAD", threadId: thread.id, communityId },
                         notificationImageUrl
@@ -162,15 +172,17 @@ export class ThreadService {
             downvotes: 0,
             netVotes: 0,
             hasVoted: null,
+            isSaved: false, // New threads aren't saved yet
             commentsCount: 0,  // New thread has no comments
             username: thread.username,
             communityName: thread.communityName,
             communityId: thread.communityId,
             communityImageUrl: community.imageUrl,
-            authorId: isAnonymous ? "" : thread.authorId,
+            authorId: thread.isAnonymous ? "" : thread.authorId,
             isAnonymous: thread.isAnonymous,
+            isOwner: true, // Creator is owner
             allowAnonymous: community.allowAnonymous,
-            avatarConfig: isAnonymous ? null : user.avatarConfig,
+            avatarConfig: thread.isAnonymous ? null : user.avatarConfig,
             createdAt: thread.createdAt.toISOString(),
             updatedAt: thread.updatedAt.toISOString()
         };
@@ -201,6 +213,7 @@ export class ThreadService {
         // 2. Fetch User Specifics (Vote) - Always fresh or handled separately
         // We don't cache userVote inside the thread object
         const voteData = await this.getThreadVoteStatus(thread, userId);
+        const isSaved = await this.getThreadSaveStatus(thread.id, userId);
 
         return {
             id: thread.id,
@@ -211,13 +224,15 @@ export class ThreadService {
             downvotes: voteData.downvotes,
             netVotes: voteData.netVotes,
             hasVoted: voteData.userVote,
+            isSaved,
             commentsCount: thread._count ? thread._count.comments : (thread.commentsCount || 0),
             username: thread.username,
             communityName: thread.communityName,
             communityId: thread.communityId,
             communityImageUrl: thread.community?.imageUrl || thread.communityImageUrl,
-            authorId: thread.isAnonymous ? "" : thread.authorId,
+            authorId: (thread.isAnonymous && thread.authorId !== userId) ? "" : thread.authorId,
             isAnonymous: thread.isAnonymous ?? false,
+            isOwner: thread.authorId === userId,
             allowAnonymous: thread.community?.allowAnonymous ?? false,
             avatarConfig: thread.isAnonymous ? null : (thread.author?.avatarConfig || thread.avatarConfig),
             createdAt: typeof thread.createdAt === 'string' ? thread.createdAt : thread.createdAt.toISOString(),
@@ -274,6 +289,7 @@ export class ThreadService {
         const threadsWithVotes = await Promise.all(
             threads.map(async (thread) => {
                 const voteData = await this.getThreadVoteStatus(thread, userId);
+                const isSaved = await this.getThreadSaveStatus(thread.id, userId);
                 return {
                     id: thread.id,
                     title: thread.title,
@@ -283,13 +299,15 @@ export class ThreadService {
                     downvotes: voteData.downvotes,
                     netVotes: voteData.netVotes,
                     hasVoted: voteData.userVote,
+                    isSaved,
                     commentsCount: thread._count.comments,
                     username: thread.username,
                     communityName: thread.communityName,
                     communityId: thread.communityId,
                     communityImageUrl: community.imageUrl,
-                    authorId: thread.isAnonymous ? "" : thread.authorId,
+                    authorId: (thread.isAnonymous && thread.authorId !== userId) ? "" : thread.authorId,
                     isAnonymous: thread.isAnonymous ?? false,
+                    isOwner: thread.authorId === userId,
                     allowAnonymous: community.allowAnonymous,
                     avatarConfig: thread.isAnonymous ? null : thread.author.avatarConfig,
                     createdAt: thread.createdAt.toISOString(),
@@ -337,6 +355,7 @@ export class ThreadService {
         const threadsWithVotes = await Promise.all(
             threads.map(async (thread) => {
                 const voteData = await this.getThreadVoteStatus(thread, requesterId);
+                const isSaved = await this.getThreadSaveStatus(thread.id, requesterId);
                 return {
                     id: thread.id,
                     title: thread.title,
@@ -346,13 +365,15 @@ export class ThreadService {
                     downvotes: voteData.downvotes,
                     netVotes: voteData.netVotes,
                     hasVoted: voteData.userVote,
+                    isSaved,
                     commentsCount: thread._count.comments,
                     username: thread.username,
                     communityName: thread.communityName,
                     communityId: thread.communityId,
                     communityImageUrl: thread.community.imageUrl,
-                    authorId: thread.isAnonymous ? "" : thread.authorId,
+                    authorId: (thread.isAnonymous && thread.authorId !== requesterId) ? "" : thread.authorId,
                     isAnonymous: thread.isAnonymous ?? false,
+                    isOwner: thread.authorId === requesterId,
                     allowAnonymous: thread.community.allowAnonymous,
                     avatarConfig: thread.isAnonymous ? null : thread.author.avatarConfig,
                     createdAt: thread.createdAt.toISOString(),
@@ -404,6 +425,7 @@ export class ThreadService {
         await CacheService.del(CacheService.keys.thread(threadId));
 
         const voteData = await this.getThreadVoteStatus(updated, userId);
+        const isSaved = await this.getThreadSaveStatus(updated.id, userId);
 
         return {
             id: updated.id,
@@ -414,17 +436,19 @@ export class ThreadService {
             downvotes: voteData.downvotes,
             netVotes: voteData.netVotes,
             hasVoted: voteData.userVote,
+            isSaved,
             commentsCount: updated._count.comments,
             username: updated.username,
             communityName: updated.communityName,
             communityId: updated.communityId,
             communityImageUrl: updated.community.imageUrl,
-            authorId: updated.isAnonymous ? "" : updated.authorId,
+            authorId: (updated.isAnonymous && updated.authorId !== userId) ? "" : updated.authorId,
             isAnonymous: updated.isAnonymous ?? false,
             allowAnonymous: updated.community.allowAnonymous,
-            avatarConfig: updated.isAnonymous ? null : updated.author.avatarConfig,
+            avatarConfig: (updated.isAnonymous && updated.authorId !== userId) ? null : updated.author.avatarConfig,
             createdAt: updated.createdAt.toISOString(),
-            updatedAt: updated.updatedAt.toISOString()
+            updatedAt: updated.updatedAt.toISOString(),
+            isOwner: updated.authorId === userId
         };
     }
 
@@ -481,6 +505,7 @@ export class ThreadService {
         await CacheService.del(CacheService.keys.thread(threadId));
 
         const voteData = await this.getThreadVoteStatus(updated, userId);
+        const isSaved = await this.getThreadSaveStatus(updated.id, userId);
 
         return {
             id: updated.id,
@@ -491,17 +516,19 @@ export class ThreadService {
             downvotes: voteData.downvotes,
             netVotes: voteData.netVotes,
             hasVoted: voteData.userVote,
+            isSaved,
             commentsCount: updated._count.comments,
             username: updated.username,
             communityName: updated.communityName,
             communityId: updated.communityId,
             communityImageUrl: updated.community.imageUrl,
-            authorId: updated.isAnonymous ? "" : updated.authorId,
+            authorId: (updated.isAnonymous && updated.authorId !== userId) ? "" : updated.authorId,
             isAnonymous: updated.isAnonymous ?? false,
             allowAnonymous: updated.community.allowAnonymous,
-            avatarConfig: updated.isAnonymous ? null : updated.author.avatarConfig,
+            avatarConfig: (updated.isAnonymous && updated.authorId !== userId) ? null : updated.author.avatarConfig,
             createdAt: updated.createdAt.toISOString(),
-            updatedAt: updated.updatedAt.toISOString()
+            updatedAt: updated.updatedAt.toISOString(),
+            isOwner: updated.authorId === userId
         };
     }
 
@@ -532,6 +559,7 @@ export class ThreadService {
         const threadsWithVotes = await Promise.all(
             threads.map(async (thread) => {
                 const voteData = await this.getThreadVoteStatus(thread, userId);
+                const isSaved = await this.getThreadSaveStatus(thread.id, userId);
                 return {
                     id: thread.id,
                     title: thread.title,
@@ -541,17 +569,19 @@ export class ThreadService {
                     downvotes: voteData.downvotes,
                     netVotes: voteData.netVotes,
                     hasVoted: voteData.userVote,
+                    isSaved,
                     commentsCount: thread._count.comments,
                     username: thread.username,
                     communityName: thread.communityName,
                     communityId: thread.communityId,
                     communityImageUrl: thread.community.imageUrl,
-                    authorId: thread.isAnonymous ? "" : thread.authorId,
+                    authorId: (thread.isAnonymous && thread.authorId !== userId) ? "" : thread.authorId,
                     isAnonymous: thread.isAnonymous ?? false,
                     allowAnonymous: thread.community.allowAnonymous,
-                    avatarConfig: thread.isAnonymous ? null : thread.author.avatarConfig,
+                    avatarConfig: (thread.isAnonymous && thread.authorId !== userId) ? null : thread.author.avatarConfig,
                     createdAt: thread.createdAt.toISOString(),
-                    updatedAt: thread.updatedAt.toISOString()
+                    updatedAt: thread.updatedAt.toISOString(),
+                    isOwner: thread.authorId === userId
                 };
             })
         );

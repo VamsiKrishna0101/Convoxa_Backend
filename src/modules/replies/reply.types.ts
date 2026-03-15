@@ -16,6 +16,7 @@ export type ReplyOutput = Readonly<{
     path: string
     depth: number
     isAnonymous: boolean
+    isOwner: boolean
     isDeleted: boolean
     deletedAt: string | null
     createdAt: string

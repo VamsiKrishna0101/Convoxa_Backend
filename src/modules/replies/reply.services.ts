@@ -107,8 +107,8 @@ export class ReplyService {
             // Send Push Notification
             await NotificationService.sendPushNotification(
                 comment.authorId,
-                `New Reply to your comment`,
-                `${isAnonymous ? "Anonymous" : user.username}: ${truncatedReply}`,
+                `c/${community.name}`,
+                `${isAnonymous ? "Anonymous user" : user.username} replied: ${truncatedReply}`,
                 { type: "REPLY_TO_COMMENT", threadId: comment.threadId, commentId: comment.id, replyId: reply.id },
                 reply.imageUrl || undefined
             ).catch(err => {
@@ -126,6 +126,7 @@ export class ReplyService {
             path: reply.path,
             depth: reply.depth,
             isAnonymous: (reply as any).isAnonymous ?? false,
+            isOwner: true, // Creator is owner
             isDeleted: reply.isDeleted,
             deletedAt: reply.deletedAt?.toISOString() || null,
             createdAt: reply.createdAt.toISOString(),
@@ -197,6 +198,7 @@ export class ReplyService {
                 path: reply.path,
                 depth: reply.depth,
                 isAnonymous: anon,
+                isOwner: reply.authorId === userId,
                 isDeleted: reply.isDeleted,
                 deletedAt: reply.deletedAt?.toISOString() || null,
                 createdAt: reply.createdAt.toISOString(),
@@ -260,6 +262,7 @@ export class ReplyService {
             path: updated.path,
             depth: updated.depth,
             isAnonymous: (updated as any).isAnonymous ?? false,
+            isOwner: true, // Editor is owner
             isDeleted: updated.isDeleted,
             deletedAt: updated.deletedAt?.toISOString() || null,
             createdAt: updated.createdAt.toISOString(),

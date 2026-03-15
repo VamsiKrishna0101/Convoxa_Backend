@@ -103,8 +103,8 @@ export class CommentService {
             // Send Push Notification to Thread Author
             await NotificationService.sendPushNotification(
                 thread.authorId,
-                `New Comment on: ${truncatedTitle}`,
-                `${isAnonymous ? "Anonymous" : user.username}: ${truncatedContent}`,
+                `c/${community.name}`,
+                `${isAnonymous ? "Anonymous user" : user.username} commented: ${truncatedContent}`,
                 { type: "REPLY_TO_THREAD", threadId: thread.id, commentId: comment.id },
                 comment.imageUrl || undefined
             ).catch(err => {
@@ -117,8 +117,9 @@ export class CommentService {
             content: comment.content,
             username: comment.username,
             threadId: comment.threadId,
-            authorId: isAnonymous ? "" : comment.authorId,
+            authorId: comment.isAnonymous ? "" : comment.authorId,
             isAnonymous: comment.isAnonymous,
+            isOwner: true, // Creator is always the owner
             createdAt: comment.createdAt.toISOString(),
             updatedAt: comment.updatedAt.toISOString(),
             upvotes: 0,
@@ -127,7 +128,7 @@ export class CommentService {
             userVote: null,
             hasVoted: null,
             imageUrl: comment.imageUrl,
-            avatarConfig: isAnonymous ? null : user.avatarConfig,
+            avatarConfig: comment.isAnonymous ? null : user.avatarConfig,
         };
     }
 
@@ -237,6 +238,7 @@ export class CommentService {
                 threadId: comment.threadId,
                 authorId: anon ? "" : comment.authorId,
                 isAnonymous: anon,
+                isOwner: comment.authorId === userId,
                 createdAt: comment.createdAt.toISOString(),
                 updatedAt: comment.updatedAt.toISOString(),
                 upvotes: comment.upvotes,
@@ -302,6 +304,7 @@ export class CommentService {
             threadId: updated.threadId,
             authorId: (updated as any).isAnonymous ? "" : updated.authorId,
             isAnonymous: (updated as any).isAnonymous ?? false,
+            isOwner: true, // Only owner can edit
             createdAt: updated.createdAt.toISOString(),
             updatedAt: updated.updatedAt.toISOString(),
             upvotes: updated.upvotes,

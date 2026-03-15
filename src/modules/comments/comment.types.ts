@@ -12,6 +12,7 @@ export type CommentOutput = Readonly<{
     threadId: string
     authorId: string
     isAnonymous: boolean
+    isOwner: boolean
     isDeleted?: boolean
     deletedAt?: string | null
     createdAt: string

@@ -16,6 +16,7 @@ export type ThreadOutput = Readonly<{
     downvotes: number;
     netVotes: number;
     hasVoted: "UP" | "DOWN" | null;  // Current user's vote
+    isSaved: boolean;  // Whether current user has saved this thread
     commentsCount: number;  // Total number of comments
     username: string;
     communityName: string;
@@ -23,6 +24,7 @@ export type ThreadOutput = Readonly<{
     communityImageUrl: string;  // Community's image URL
     authorId: string;
     isAnonymous: boolean;
+    isOwner: boolean;
     allowAnonymous?: boolean;
     avatarConfig?: any;
     isDeleted?: boolean;

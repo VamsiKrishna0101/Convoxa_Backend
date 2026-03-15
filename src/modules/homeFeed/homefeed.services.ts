@@ -178,14 +178,15 @@ export class HomeFeedService {
                 communityId: t.communityId,
                 communityName: t.community.name,
                 communityImage: t.community.imageUrl,
-                authorId: (t.isAnonymous) ? "" : t.authorId,
-                username: (t.isAnonymous) ? "Anonymous" : t.author.username,
+                authorId: (t.isAnonymous && t.authorId !== userId) ? "" : t.authorId,
+                username: (t.isAnonymous && t.authorId !== userId) ? "Anonymous" : t.author.username,
                 authorRole: t.author.role,
                 createdAt: new Date(t.createdAt).toISOString(),
                 hasVoted: t.votes && t.votes.length > 0 ? (t.votes[0] as any).type : null,
                 hotScore: t.hotScore,
-                avatarConfig: (t.isAnonymous) ? null : t.author.avatarConfig,
-                isAnonymous: t.isAnonymous ?? false
+                avatarConfig: (t.isAnonymous && t.authorId !== userId) ? null : t.author.avatarConfig,
+                isAnonymous: t.isAnonymous ?? false,
+                isOwner: t.authorId === userId
             })),
             nextCursor: nextCursorStr ? CursorHelper.encode(nextCursorStr) : null
         };

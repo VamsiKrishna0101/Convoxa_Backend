@@ -25,7 +25,11 @@ export class ProfileService {
                 }
             }),
             prisma.thread.findMany({
-                where: { authorId: userId, isDeleted: false },
+                where: { 
+                    authorId: userId, 
+                    isDeleted: false,
+                    ...(userId !== viewerId ? { isAnonymous: false } : {})
+                },
                 orderBy: { createdAt: 'desc' },
                 take: 20,
                 select: {
@@ -33,14 +37,23 @@ export class ProfileService {
                     title: true,
                     content: true,
                     upvotes: true,
+                    downvotes: true,
+                    commentsCount: true,
                     communityId: true,
                     createdAt: true,
                     communityName: true,
-                    author: { select: { username: true, avatarConfig: true } }
+                    isAnonymous: true,
+                    isDeleted: true,
+                    author: { select: { username: true, avatarConfig: true } },
+                    _count: { select: { comments: true } }
                 }
             }),
             prisma.comment.findMany({
-                where: { authorId: userId, isDeleted: false },
+                where: { 
+                    authorId: userId, 
+                    isDeleted: false,
+                    ...(userId !== viewerId ? { isAnonymous: false } : {})
+                },
                 orderBy: { createdAt: 'desc' },
                 take: 20,
                 select: {
@@ -101,15 +114,21 @@ export class ProfileService {
             conversationId: conversationIdVal,
             initiatorId: initiatorIdVal,
             withdrawnAt: withdrawnAtVal,
-            threads: threads.map(t => ({ ...t, avatarConfig: t.author?.avatarConfig })),
+            threads: threads.map(t => ({ 
+                ...t, 
+                netVotes: t.upvotes - t.downvotes,
+                avatarConfig: (t as any).author?.avatarConfig 
+            })),
             comments
         } as any;
     }
 
-    static async getPosts(userId: string, sort: 'asc' | 'desc' = 'desc'): Promise<UserThreadOutput[]> {
+    static async getPosts(userId: string, viewerId?: string, sort: 'asc' | 'desc' = 'desc'): Promise<UserThreadOutput[]> {
         const posts = await prisma.thread.findMany({
             where: {
-                authorId: userId
+                authorId: userId,
+                isDeleted: false,
+                ...(userId !== viewerId ? { isAnonymous: false } : {})
             },
             orderBy: {
                 createdAt: sort
@@ -119,18 +138,27 @@ export class ProfileService {
                 title: true,
                 content: true,
                 upvotes: true,
+                downvotes: true,
+                commentsCount: true,
                 communityId: true,
                 createdAt: true,
-                communityName: true
+                communityName: true,
+                isAnonymous: true,
+                _count: { select: { comments: true } }
             }
         })
-        return posts
+        return posts.map(p => ({
+            ...p,
+            netVotes: p.upvotes - p.downvotes
+        }))
     }
 
-    static async getReplies(userId: string, sort: 'asc' | 'desc' = 'desc'): Promise<UserReplyOutput[]> {
-        const replies = await prisma.reply.findMany({
+    static async getReplies(userId: string, viewerId?: string, sort: 'asc' | 'desc' = 'desc'): Promise<any[]> {
+        const replies = await prisma.comment.findMany({
             where: {
-                authorId: userId
+                authorId: userId,
+                isDeleted: false,
+                ...(userId !== viewerId ? { isAnonymous: false } : {})
             },
             orderBy: {
                 createdAt: sort
@@ -138,8 +166,9 @@ export class ProfileService {
             select: {
                 id: true,
                 content: true,
-                commentId: true,
-                createdAt: true
+                threadId: true,
+                createdAt: true,
+                upvotes: true
             }
         })
         return replies
@@ -301,6 +330,10 @@ export class ProfileService {
                 content: true,
                 communityId: true,
                 createdAt: true,
+                upvotes: true,
+                downvotes: true,
+                commentsCount: true,
+                isAnonymous: true,
                 community: {
                     select: {
                         name: true
@@ -311,17 +344,15 @@ export class ProfileService {
                         username: true,
                         avatarConfig: true
                     }
-                }
+                },
+                _count: { select: { comments: true } }
             }
         });
-
+        
         return threads.map(t => ({
             ...t,
-            // If UserThreadOutput doesn't have author field, we might need to update it or just return it as is if it allows extra props (unlikely in strict TS)
-            // Let's assume for now we adhere to the existing type or update it. 
-            // Existing `getPosts` selects: id, title, content, upvotes, communityId, createdAt, communityName.
-            // But upvoted threads are likely from other authors, so displaying author name is important.
-            author: t.author // Include author
+            netVotes: t.upvotes - t.downvotes,
+            author: (t as any).author
         })) as any;
     }
 }
