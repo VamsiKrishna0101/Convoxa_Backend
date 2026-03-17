@@ -126,6 +126,7 @@ model Thread {
   authorId      String
   isAnonymous   Boolean        @default(false)
   isFlagged     Boolean        @default(false)
+  isNSFW        Boolean        @default(false)
   hotScore      Float          @default(0)
   commentsCount Int            @default(0)
   createdAt     DateTime       @default(now())

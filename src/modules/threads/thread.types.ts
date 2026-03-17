@@ -5,6 +5,7 @@ export type ThreadInput = {
     imageUrl?: string,  // Optional image URL from GCS
     isFlagged?: boolean,
     isAnonymous?: boolean,
+    isNSFW?: boolean,
 }
 
 export type ThreadOutput = Readonly<{
@@ -24,6 +25,7 @@ export type ThreadOutput = Readonly<{
     communityImageUrl: string;  // Community's image URL
     authorId: string;
     isAnonymous: boolean;
+    isNSFW: boolean;
     isOwner: boolean;
     allowAnonymous?: boolean;
     avatarConfig?: any;

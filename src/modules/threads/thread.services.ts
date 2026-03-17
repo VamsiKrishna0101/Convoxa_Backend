@@ -52,7 +52,7 @@ export class ThreadService {
         input: ThreadInput,
         userId: string
     ): Promise<ThreadOutput> {
-        const { title, content, communityId, imageUrl, isAnonymous = false } = input;
+        const { title, content, communityId, imageUrl, isAnonymous = false, isNSFW = false } = input;
 
         if (!title || !content || !communityId) {
             throw new Error("TITLE_CONTENT_COMMUNITY_REQUIRED");
@@ -105,6 +105,7 @@ export class ThreadService {
                 communityName: community.name,
                 imageUrl: imageUrl || null,
                 isFlagged: input.isFlagged || false,
+                isNSFW: isNSFW ?? false,
                 isAnonymous,
                 hotScore: ScoreService.calculateHotScore(0, 0, new Date()) // Initial score
             }
@@ -180,6 +181,7 @@ export class ThreadService {
             communityImageUrl: community.imageUrl,
             authorId: thread.isAnonymous ? "" : thread.authorId,
             isAnonymous: thread.isAnonymous,
+            isNSFW: (thread as any).isNSFW ?? false,
             isOwner: true, // Creator is owner
             allowAnonymous: community.allowAnonymous,
             avatarConfig: thread.isAnonymous ? null : user.avatarConfig,
@@ -232,6 +234,7 @@ export class ThreadService {
             communityImageUrl: thread.community?.imageUrl || thread.communityImageUrl,
             authorId: (thread.isAnonymous && thread.authorId !== userId) ? "" : thread.authorId,
             isAnonymous: thread.isAnonymous ?? false,
+            isNSFW: thread.isNSFW ?? false,
             isOwner: thread.authorId === userId,
             allowAnonymous: thread.community?.allowAnonymous ?? false,
             avatarConfig: thread.isAnonymous ? null : (thread.author?.avatarConfig || thread.avatarConfig),
@@ -307,6 +310,7 @@ export class ThreadService {
                     communityImageUrl: community.imageUrl,
                     authorId: (thread.isAnonymous && thread.authorId !== userId) ? "" : thread.authorId,
                     isAnonymous: thread.isAnonymous ?? false,
+                    isNSFW: (thread as any).isNSFW ?? false,
                     isOwner: thread.authorId === userId,
                     allowAnonymous: community.allowAnonymous,
                     avatarConfig: thread.isAnonymous ? null : thread.author.avatarConfig,
@@ -373,6 +377,7 @@ export class ThreadService {
                     communityImageUrl: thread.community.imageUrl,
                     authorId: (thread.isAnonymous && thread.authorId !== requesterId) ? "" : thread.authorId,
                     isAnonymous: thread.isAnonymous ?? false,
+                    isNSFW: (thread as any).isNSFW ?? false,
                     isOwner: thread.authorId === requesterId,
                     allowAnonymous: thread.community.allowAnonymous,
                     avatarConfig: thread.isAnonymous ? null : thread.author.avatarConfig,
@@ -390,7 +395,7 @@ export class ThreadService {
 
     static async updateThread(
         threadId: string,
-        input: Pick<ThreadInput, "title" | "content">,
+        input: Pick<ThreadInput, "title" | "content" | "isNSFW">,
         userId: string
     ): Promise<ThreadOutput> {
         const thread = await prisma.thread.findUnique({
@@ -409,6 +414,9 @@ export class ThreadService {
         if (input.content) {
             if (input.content.length > 10000) throw new Error("Content must be less than 10,000 characters.");
             updateData.content = input.content;
+        }
+        if (input.isNSFW !== undefined) {
+            updateData.isNSFW = input.isNSFW;
         }
 
         const updated = await prisma.thread.update({
@@ -444,6 +452,7 @@ export class ThreadService {
             communityImageUrl: updated.community.imageUrl,
             authorId: (updated.isAnonymous && updated.authorId !== userId) ? "" : updated.authorId,
             isAnonymous: updated.isAnonymous ?? false,
+            isNSFW: (updated as any).isNSFW ?? false,
             allowAnonymous: updated.community.allowAnonymous,
             avatarConfig: (updated.isAnonymous && updated.authorId !== userId) ? null : updated.author.avatarConfig,
             createdAt: updated.createdAt.toISOString(),
@@ -524,6 +533,7 @@ export class ThreadService {
             communityImageUrl: updated.community.imageUrl,
             authorId: (updated.isAnonymous && updated.authorId !== userId) ? "" : updated.authorId,
             isAnonymous: updated.isAnonymous ?? false,
+            isNSFW: (updated as any).isNSFW ?? false,
             allowAnonymous: updated.community.allowAnonymous,
             avatarConfig: (updated.isAnonymous && updated.authorId !== userId) ? null : updated.author.avatarConfig,
             createdAt: updated.createdAt.toISOString(),
@@ -577,6 +587,7 @@ export class ThreadService {
                     communityImageUrl: thread.community.imageUrl,
                     authorId: (thread.isAnonymous && thread.authorId !== userId) ? "" : thread.authorId,
                     isAnonymous: thread.isAnonymous ?? false,
+                    isNSFW: (thread as any).isNSFW ?? false,
                     allowAnonymous: thread.community.allowAnonymous,
                     avatarConfig: (thread.isAnonymous && thread.authorId !== userId) ? null : thread.author.avatarConfig,
                     createdAt: thread.createdAt.toISOString(),

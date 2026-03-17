@@ -3,7 +3,7 @@ import { HomeFeedService } from "./homefeed.services.js";
 
 export const getHomeFeed = async (req: Request, res: Response) => {
     try {
-        const userId = req.user!.userId;
+        const userId = req.user?.userId || "";
         const cursor = req.query.cursor as string | undefined;
         const limit = parseInt(req.query.limit as string) || 20;
         const sortBy = (req.query.sortBy as 'HOT' | 'NEW' | 'TOP') || 'HOT';

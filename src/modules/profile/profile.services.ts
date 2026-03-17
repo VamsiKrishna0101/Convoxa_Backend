@@ -44,6 +44,7 @@ export class ProfileService {
                     communityName: true,
                     isAnonymous: true,
                     isDeleted: true,
+                    isNSFW: true,
                     author: { select: { username: true, avatarConfig: true } },
                     _count: { select: { comments: true } }
                 }
@@ -144,6 +145,7 @@ export class ProfileService {
                 createdAt: true,
                 communityName: true,
                 isAnonymous: true,
+                isNSFW: true,
                 _count: { select: { comments: true } }
             }
         })
@@ -334,6 +336,7 @@ export class ProfileService {
                 downvotes: true,
                 commentsCount: true,
                 isAnonymous: true,
+                isNSFW: true,
                 community: {
                     select: {
                         name: true

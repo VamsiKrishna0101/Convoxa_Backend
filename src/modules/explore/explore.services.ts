@@ -41,6 +41,7 @@ export class ExploreService {
             communityImage: t.community.imageUrl,
             authorId: t.authorId,
             username: t.author.username,
+            isNSFW: t.isNSFW || false,
             createdAt: t.createdAt,
             hasVoted: t.votes && Array.isArray(t.votes) && t.votes.length > 0 ? t.votes[0].type : null
         }));
@@ -308,6 +309,7 @@ export class ExploreService {
                 communityImage: t.community.imageUrl,
                 upvotes: t.upvotes,
                 commentsCount: t._count.comments,
+                isNSFW: t.isNSFW || false,
                 createdAt: t.createdAt.toISOString()
             }));
         }

@@ -74,7 +74,6 @@ export const getThreadComments = async (req: Request, res: Response) => {
         const rawSortBy = req.query.sortBy ? String(req.query.sortBy) : "TOP";
         const sortBy = (["TOP", "NEW", "OLD"].includes(rawSortBy) ? rawSortBy : "TOP") as "TOP" | "NEW" | "OLD";
 
-        console.log("🔍 [Contoller] getThreadComments query:", req.query, "-> sortBy:", sortBy);
 
         const result = await CommentService.getThreadComments(String(threadId), userId, cursor, limit, sortBy);
         return res.status(200).json({ success: true, result });

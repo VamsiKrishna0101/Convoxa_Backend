@@ -74,6 +74,7 @@ export class HomeFeedService {
             id: true, title: true, content: true, imageUrl: true,
             upvotes: true, downvotes: true, createdAt: true,
             hotScore: true, isAnonymous: true, authorId: true, communityId: true,
+            isNSFW: true,
             community: { select: { id: true, name: true, imageUrl: true, topic: true, allowAnonymous: true } },
             author: { select: { id: true, username: true, role: true, avatarConfig: true } },
             votes: { where: { userId }, select: { type: true } },
@@ -186,6 +187,7 @@ export class HomeFeedService {
                 hotScore: t.hotScore,
                 avatarConfig: (t.isAnonymous && t.authorId !== userId) ? null : t.author.avatarConfig,
                 isAnonymous: t.isAnonymous ?? false,
+                isNSFW: t.isNSFW ?? false,
                 isOwner: t.authorId === userId
             })),
             nextCursor: nextCursorStr ? CursorHelper.encode(nextCursorStr) : null

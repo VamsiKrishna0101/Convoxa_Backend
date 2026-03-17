@@ -181,7 +181,6 @@ export class CommentService {
         if (!thread) throw new Error("THREAD_NOT_FOUND");
 
         // Determine order
-        console.log("🔍 [Service] getThreadComments sortBy:", sortBy);
 
         let orderBy: any = [
             { createdAt: 'asc' },
@@ -201,7 +200,6 @@ export class CommentService {
             ];
         }
 
-        console.log("🔍 [Service] Computed orderBy:", JSON.stringify(orderBy));
 
         const comments = await prisma.comment.findMany({
             where: { threadId },

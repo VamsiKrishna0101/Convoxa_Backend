@@ -117,13 +117,19 @@ async function startServer() {
         app.use('/api/help', helpRoutes);
 
         console.log("🚩 Checkpoint 5: Attempting to Listen...");
+        httpserver.on('error', (err: any) => {
+            console.error("❌ HTTP SERVER ERROR:", err);
+            if (err.code === 'EADDRINUSE') {
+                console.error(`❌ Port ${PORT} is already in use!`);
+            }
+            process.exit(1);
+        });
         httpserver.listen(Number(PORT), "0.0.0.0", () => {
             console.log(`🚀 SERVER RUNNING ON PORT ${PORT}`)
         })
 
     } catch (fatalError) {
         console.error("🛑 FATAL STARTUP ERROR:", fatalError);
-        // Ensure we log before we die
         process.exit(1);
     }
 }
