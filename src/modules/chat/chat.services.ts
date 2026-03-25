@@ -191,24 +191,22 @@ export class ChatService {
             await Promise.all(participants.map(async (p) => {
                 if (p.isMuted) return;
 
-                const isOnline = await NotificationService.isUserOnline(p.userId);
-                if (!isOnline) {
-                    const truncatedContent = messageOutput.content.length > 100
-                        ? messageOutput.content.substring(0, 100) + "..."
-                        : messageOutput.content;
+                // Send Push Notification reliably (ignore online status)
+                const truncatedContent = messageOutput.content.length > 100
+                    ? messageOutput.content.substring(0, 100) + "..."
+                    : messageOutput.content;
 
-                    const notificationImage = messageOutput.mediaUrl || undefined;
+                const notificationImage = messageOutput.mediaUrl || undefined;
 
-                    await NotificationService.sendPushNotification(
-                        p.userId,
-                        messageOutput.sender.username, // Title: Sender Name
-                        truncatedContent, // Body: Message Content
-                        { conversationId, type: "NEW_MESSAGE", senderId: messageOutput.senderId },
-                        notificationImage
-                    ).catch(err => {
-                        // console.error("Push failed for user", p.userId, err);
-                    });
-                }
+                await NotificationService.sendPushNotification(
+                    p.userId,
+                    messageOutput.sender.username, // Title: Sender Name
+                    truncatedContent, // Body: Message Content
+                    { conversationId, type: "NEW_MESSAGE", senderId: messageOutput.senderId },
+                    notificationImage
+                ).catch(err => {
+                    // console.error("Push failed for user", p.userId, err);
+                });
             }));
 
             // Update Conversation updatedAt

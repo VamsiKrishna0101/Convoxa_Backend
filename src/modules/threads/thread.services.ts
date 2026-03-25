@@ -6,6 +6,7 @@ import { ScoreService } from "../common/score.services.js";
 import { CacheService, CACHE_TTL } from "../common/cache.service.js";
 import { redis } from "../../config/redis.js";
 import { BotService } from "../bot/bot.service.js";
+import { notificationQueue } from "../../config/queue.js";
 
 
 export class ThreadService {
@@ -151,6 +152,18 @@ export class ThreadService {
                     await redis.set(throttleKey, "1", "EX", 120);
                 }
             }));
+
+            // --- BROADCAST PUSHES (Offloaded to Queue for scalability) ---
+            await notificationQueue.add('broadcast-new-thread', {
+                type: 'BROADCAST_NEW_THREAD',
+                threadId: thread.id,
+                communityId,
+                authorId: userId,
+                title: `Trending in c/${community.name}`,
+                body: `New post: ${thread.title}`,
+                imageUrl: thread.imageUrl || undefined
+            });
+
         } catch (err) {
             console.error("Failed to send community notifications:", err);
         }
@@ -688,6 +701,16 @@ export class ThreadService {
                             receiverId: thread.authorId,
                             senderId: userId,
                             threadId: threadId
+                        });
+
+                        // Also send Push Notification
+                        await NotificationService.sendPushNotification(
+                            thread.authorId,
+                            "New Upvote",
+                            `${voter.username} upvoted your thread: "${truncatedTitle}"`,
+                            { type: "UPVOTED_THREAD", threadId: threadId }
+                        ).catch(err => {
+                            // console.error("Upvote push failed", err);
                         });
                     }
                 } catch (e) {

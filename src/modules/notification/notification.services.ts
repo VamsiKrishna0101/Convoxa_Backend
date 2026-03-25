@@ -124,8 +124,18 @@ export class NotificationService {
 
             const response = await app.messaging().send(message);
             console.log("Firebase push sent successfully. Response:", response);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to send push notification:", error);
+
+            // AUTO-CLEANUP: If the token is no longer registered, remove it from our database
+            if (error?.errorInfo?.code === 'messaging/registration-token-not-registered' || 
+                error?.code === 'messaging/registration-token-not-registered') {
+                console.log(`🧹 Clearing stale push token for user ${userId}`);
+                await prisma.user.update({
+                    where: { id: userId },
+                    data: { expopushtoken: null } as any
+                }).catch(() => {});
+            }
         }
     }
 

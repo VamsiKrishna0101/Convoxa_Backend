@@ -3,6 +3,7 @@ import type { ReplyInput, ReplyOutput, EditReplyInput, DeleteReplyInput } from "
 import { NotificationService } from "../notification/notification.services.js";
 import { NotificationType, NotificationStatus } from "@prisma/client";
 import { CacheService } from "../common/cache.service.js";
+import { aiReplyQueue } from "../../config/queue.js";
 
 export class ReplyService {
 
@@ -116,6 +117,17 @@ export class ReplyService {
             });
         }
 
+        // --- @convoxaai MENTION TRIGGER ---
+        if (content && content.toLowerCase().includes("@convoxaai")) {
+            await aiReplyQueue.add('process-mention', {
+                threadId: comment.threadId,
+                commentId: reply.commentId,
+                replyId: reply.id,
+                mentionText: content,
+                authorId: userId
+            });
+        }
+
         return {
             id: reply.id,
             content: reply.content,
@@ -165,7 +177,7 @@ export class ReplyService {
                     select: { userId: true, type: true }
                 }
             },
-            orderBy: { createdAt: 'asc' } // Changed from path to createdAt for consistent cursor behavior in flat list
+            orderBy: { path: 'asc' } // Sorted by path to ensure nested replies are returned in tree-order
         });
 
         // Note: 'path' ordering is better for nested structure, but cursor pagination on 'path' string is tricky.
@@ -401,6 +413,16 @@ export class ReplyService {
                             replyId: replyId,
                             commentId: reply.commentId,
                             threadId: reply.comment.threadId
+                        });
+
+                        // Also send Push Notification
+                        await NotificationService.sendPushNotification(
+                            reply.authorId,
+                            "New Upvote",
+                            `${voter.username} upvoted your reply`,
+                            { type: "UPVOTED_REPLY", threadId: reply.comment.threadId, commentId: reply.commentId, replyId: replyId }
+                        ).catch(err => {
+                            // console.error("Upvote push failed", err);
                         });
                     }
                 } catch (e) {

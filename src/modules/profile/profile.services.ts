@@ -269,6 +269,16 @@ export class ProfileService {
                     senderId: followerId,
                     receiverId: followingId,
                 });
+
+                // Also send Push Notification
+                await NotificationService.sendPushNotification(
+                    followingId,
+                    "New Follower",
+                    `${follower.username} started following you`,
+                    { type: "NEW_FOLLOWER", senderId: followerId }
+                ).catch(err => {
+                    // console.error("Follow push failed", err);
+                });
             }
         } catch (e) {
             // console.error("Failed to notify new follower", e);

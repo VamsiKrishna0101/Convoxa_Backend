@@ -175,21 +175,19 @@ export class GroupService {
             await Promise.all(groupMembers.map(async (member) => {
                 if (member.isMuted) return;
 
-                const isOnline = await NotificationService.isUserOnline(member.userId);
-                if (!isOnline) {
-                    const truncatedContent = messageOutput.content.length > 100
-                        ? messageOutput.content.substring(0, 100) + "..."
-                        : messageOutput.content;
+                // Send Push Notification reliably (ignore online status)
+                const truncatedContent = messageOutput.content.length > 100
+                    ? messageOutput.content.substring(0, 100) + "..."
+                    : messageOutput.content;
 
-                    await NotificationService.sendPushNotification(
-                        member.userId,
-                        `${messageOutput.sender.username} in ${group?.name || 'Group'}`,
-                        truncatedContent,
-                        { groupId, type: "NEW_GROUP_MESSAGE", senderId: messageOutput.senderId }
-                    ).catch(err => {
-                        // console.error("Push failed for group member", member.userId, err);
-                    });
-                }
+                await NotificationService.sendPushNotification(
+                    member.userId,
+                    `${messageOutput.sender.username} in ${group?.name || 'Group'}`,
+                    truncatedContent,
+                    { groupId, type: "NEW_GROUP_MESSAGE", senderId: messageOutput.senderId }
+                ).catch(err => {
+                    // console.error("Push failed for group member", member.userId, err);
+                });
             }));
 
         } catch (error) {

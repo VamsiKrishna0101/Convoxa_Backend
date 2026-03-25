@@ -4,6 +4,7 @@ import { NotificationType, NotificationStatus } from "@prisma/client";
 import { NotificationService } from "../notification/notification.services.js";
 import { CacheService } from "../common/cache.service.js";
 import { ScoreService } from "../common/score.services.js";
+import { aiReplyQueue } from "../../config/queue.js";
 
 
 export class CommentService {
@@ -109,6 +110,16 @@ export class CommentService {
                 comment.imageUrl || undefined
             ).catch(err => {
                 // console.error("Comment push failed", err);
+            });
+        }
+
+        // --- @convoxaai MENTION TRIGGER ---
+        if (content && content.toLowerCase().includes("@convoxaai")) {
+            await aiReplyQueue.add('process-mention', {
+                threadId,
+                commentId: comment.id,
+                mentionText: content,
+                authorId: userId
             });
         }
 
@@ -451,6 +462,16 @@ export class CommentService {
                             receiverId: comment.authorId,
                             senderId: userId,
                             commentId: commentId,
+                        });
+
+                        // Also send Push Notification
+                        await NotificationService.sendPushNotification(
+                            comment.authorId,
+                            "New Upvote",
+                            `${voter.username} upvoted your comment: "${truncatedContent}"`,
+                            { type: "UPVOTED_COMMENT", commentId: commentId }
+                        ).catch(err => {
+                            // console.error("Upvote push failed", err);
                         });
                     }
                 } catch (e) {

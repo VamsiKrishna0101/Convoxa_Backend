@@ -37,8 +37,10 @@ import http from "http"
 import jwt from "jsonwebtoken"
 import { initSocket } from './sockets/index.js'
 import { initializeFirebase } from './config/firebase.js'
-import { createWorker, BOT_QUEUE_NAME } from './config/queue.js';
+import { createWorker, BOT_QUEUE_NAME, NOTIFICATION_QUEUE_NAME, AI_REPLY_QUEUE_NAME } from './config/queue.js';
 import { botProcessor } from './modules/bot/bot.worker.js';
+import { notificationProcessor } from './modules/notification/notification.worker.js';
+import { aiReplyProcessor } from './modules/bot/ai_reply.worker.js';
 
 const app = express()
 const PORT = process.env.PORT || 8080
@@ -51,11 +53,19 @@ async function startServer() {
         initializeFirebase();
         console.log("✅ Firebase Initialized");
 
-        console.log("🚩 Checkpoint 2: Starting BullMQ Worker...");
+        console.log("🚩 Checkpoint 2: Starting BullMQ Workers...");
         try {
-            // If Redis is missing, this is usually where 'exit(1)' happens
-            createWorker(botProcessor);
+            // Start Bot Worker
+            createWorker(BOT_QUEUE_NAME, botProcessor);
             console.log(`✅ Worker for queue ${BOT_QUEUE_NAME} started`);
+
+            // Start Notification Worker
+            createWorker(NOTIFICATION_QUEUE_NAME, notificationProcessor);
+            console.log(`✅ Worker for queue ${NOTIFICATION_QUEUE_NAME} started`);
+
+            // Start AI Reply Worker
+            createWorker(AI_REPLY_QUEUE_NAME, aiReplyProcessor);
+            console.log(`✅ Worker for queue ${AI_REPLY_QUEUE_NAME} started`);
         } catch (workerErr: any) {
             console.error("❌ Worker failed (Redis issue?):", workerErr.message);
             // We DON'T crash the whole app here so the web server can still start
