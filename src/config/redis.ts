@@ -14,6 +14,7 @@ export const redisConfig = {
 
 export const redis = new Redis({
     ...redisConfig,
+    maxRetriesPerRequest: null, // Required by BullMQ
     retryStrategy: (times) => {
         const delay = Math.min(times * 50, 2000);
         return delay;
