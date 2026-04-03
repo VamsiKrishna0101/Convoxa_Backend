@@ -42,6 +42,7 @@ model User {
   savedThreads             SavedThread[]
   threads                  Thread[]
   votes                    ThreadVote[]
+  pollVotes                PollVote[]
   following                UserFollow[]              @relation("Followers")
   followers                UserFollow[]              @relation("Followings")
   viewedGroupMessages      GroupMessage[]            @relation("ViewOnceGroupViews")
@@ -140,6 +141,8 @@ model Thread {
   author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
   community     Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
   votes         ThreadVote[]
+  type          ThreadType?     @default(TEXT)
+  poll          Poll?
 
   @@index([communityId])
   @@index([authorId])
@@ -162,6 +165,51 @@ model ThreadVote {
   @@index([userId])
 }
 
+model Poll {
+  id         String     @id @default(uuid())
+  totalVotes Int        @default(0)
+  expiresAt  DateTime?
+  options    Option[]
+  votes      PollVote[]
+  threadId   String     @unique
+  thread     Thread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  isDeleted  Boolean    @default(false)
+  deletedAt  DateTime?
+}
+
+model Option {
+  id         String     @id @default(uuid())
+  text       String
+  votesCount Int        @default(0)
+  pollId     String
+  poll       Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes      PollVote[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  isDeleted  Boolean    @default(false)
+  deletedAt  DateTime?
+
+  @@index([pollId])
+}
+
+model PollVote {
+  id        String   @id @default(uuid())
+  pollId    String
+  optionId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId]) 
+  @@index([pollId])
+  @@index([optionId])
+  @@index([userId])
+}
 model Comment {
   id            String         @id @default(uuid())
   content       String
@@ -541,6 +589,13 @@ enum NotificationType {
 enum NotificationStatus {
   READ
   UNREAD
+}
+
+enum ThreadType {
+  TEXT
+  POLL
+  IMAGE
+  VIDEO
 }
 
 enum ConversationStatus {

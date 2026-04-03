@@ -62,6 +62,7 @@ export class AuthService {
     // ---------------- LOGIN ----------------
     static async login(input: LoginDTO) {
         const { email, password } = input;
+        console.log(input)
 
         if (!email || !password) {
             throw new Error("INVALID_CREDENTIALS");

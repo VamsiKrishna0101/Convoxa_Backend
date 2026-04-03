@@ -75,7 +75,12 @@ export class HomeFeedService {
             upvotes: true, downvotes: true, createdAt: true,
             hotScore: true, isAnonymous: true, authorId: true, communityId: true,
             isNSFW: true,
+            type: true,
+            poll: { include: { options: true, votes: { where: { userId } } } },
+
+
             community: { select: { id: true, name: true, imageUrl: true, topic: true, allowAnonymous: true } },
+
             author: { select: { id: true, username: true, role: true, avatarConfig: true } },
             votes: { where: { userId }, select: { type: true } },
             _count: { select: { comments: true } }
@@ -188,8 +193,21 @@ export class HomeFeedService {
                 avatarConfig: (t.isAnonymous && t.authorId !== userId) ? null : t.author.avatarConfig,
                 isAnonymous: t.isAnonymous ?? false,
                 isNSFW: t.isNSFW ?? false,
-                isOwner: t.authorId === userId
+                isOwner: t.authorId === userId,
+                type: t.type || 'TEXT',
+                pollVote: t.poll && t.poll.votes && t.poll.votes.length > 0 ? t.poll.votes[0].optionId : null,
+                poll: t.poll ? {
+                    id: t.poll.id,
+                    totalVotes: t.poll.totalVotes,
+                    expiresAt: t.poll.expiresAt ? t.poll.expiresAt.toISOString() : null,
+                    options: t.poll.options.map((opt: any) => ({
+                        id: opt.id,
+                        text: opt.text,
+                        votesCount: opt.votesCount
+                    }))
+                } : null
             })),
+
             nextCursor: nextCursorStr ? CursorHelper.encode(nextCursorStr) : null
         };
     }

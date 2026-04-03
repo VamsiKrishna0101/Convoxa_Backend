@@ -31,6 +31,7 @@ import notificationRoutes from './modules/notification/notification.routes.js';
 import appSettingRoutes from './modules/appSettings/appSettings.routes.js';
 import feedbackRoutes from './modules/feedback/feedback.routes.js';
 import helpRoutes from './modules/help/help.routes.js';
+import pollRoutes from './modules/poll/poll.routes.js';
 
 import { initIO } from './socket.js'
 import http from "http"
@@ -125,6 +126,7 @@ async function startServer() {
         app.use("/api/settings", appSettingRoutes);
         app.use("/api/feedback", feedbackRoutes);
         app.use('/api/help', helpRoutes);
+        app.use('/api/poll', pollRoutes);
 
         console.log("🚩 Checkpoint 5: Attempting to Listen...");
         httpserver.on('error', (err: any) => {
